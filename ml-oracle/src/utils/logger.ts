@@ -1,0 +1,27 @@
+import pino from 'pino';
+import { config } from '../config.js';
+
+let loggerInstance: pino.Logger | null = null;
+
+function getLogger(): pino.Logger {
+  if (!loggerInstance) {
+    // Use defaults if config not loaded yet
+    const logLevel = config.LOG_LEVEL || 'info';
+    const logPretty = config.LOG_PRETTY !== false;
+
+    loggerInstance = pino({
+      level: logLevel,
+      transport: logPretty ? {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'HH:MM:ss Z',
+          ignore: 'pid,hostname',
+        },
+      } : undefined,
+    });
+  }
+  return loggerInstance;
+}
+
+export { getLogger as logger };
