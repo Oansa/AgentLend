@@ -41,6 +41,14 @@ const envSchema = z.object({
   ALCHEMY_API_KEY: z.string().optional(),
   MORALIS_API_KEY: z.string().optional(),
 
+  // CROO CAP Integration
+  CAP_API_URL: z.string().url().optional(),
+  CAP_WS_URL: z.string().url().optional(),
+  CAP_API_KEY: z.string().optional(),
+  CROO_AGENT_DID: z.string().optional(),
+  CROO_API_URL: z.string().url().optional(),
+  CROO_WS_URL: z.string().url().optional(),
+
   // Rate Limiting
   RATE_LIMIT_MAX: z.coerce.number().default(100),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
@@ -94,6 +102,12 @@ export const config = {
   get COINGECKO_API_KEY() { return getConfig().COINGECKO_API_KEY; },
   get ALCHEMY_API_KEY() { return getConfig().ALCHEMY_API_KEY; },
   get MORALIS_API_KEY() { return getConfig().MORALIS_API_KEY; },
+  get CAP_API_URL() { return getConfig().CAP_API_URL; },
+  get CAP_WS_URL() { return getConfig().CAP_WS_URL; },
+  get CAP_API_KEY() { return getConfig().CAP_API_KEY; },
+  get CROO_AGENT_DID() { return getConfig().CROO_AGENT_DID; },
+  get CROO_API_URL() { return getConfig().CROO_API_URL; },
+  get CROO_WS_URL() { return getConfig().CROO_WS_URL; },
   get RATE_LIMIT_MAX() { return getConfig().RATE_LIMIT_MAX; },
   get RATE_LIMIT_WINDOW_MS() { return getConfig().RATE_LIMIT_WINDOW_MS; },
   get METRICS_ENABLED() { return getConfig().METRICS_ENABLED; },

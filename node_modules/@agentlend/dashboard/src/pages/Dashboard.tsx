@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { formatCurrency, formatNumber, getScoreColor, getScoreLabel, getCollateralRatio } from '../lib/utils';
-import { TrendingUp, TrendingDown, Wallet, Users, FileText, Target, DollarSign } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Users, FileText, Target, DollarSign, Plus } from 'lucide-react';
+import { useProtocolStats, useRecentLoans } from '../lib/contractHooks';
+import { useState } from 'react';
 
 const stats = [
   { name: 'Total Value Locked', value: '$2.4M', change: '+12.5%', icon: DollarSign, positive: true },
@@ -233,5 +235,3 @@ export function Dashboard() {
     </div>
   );
 }
-
-import { cn } from '../lib/utils';

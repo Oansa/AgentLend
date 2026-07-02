@@ -3,6 +3,7 @@ import { config } from './config.js';
 import { logger } from './utils/logger.js';
 import { oracleService } from './services/oracleService.js';
 import { initializeQueue, shutdownQueue } from './services/queueService.js';
+import { capService } from './services/capService.js';
 import type { ScoreInput, AgentDID, ScoreResponse, HealthResponse, MetricsData } from './types/index.js';
 import { z } from 'zod';
 
@@ -157,7 +158,7 @@ async function buildApp(): Promise<FastifyInstance> {
     return reply.send(status);
   });
 
-  // Get score by agent DID (from blockchain)
+  // Get score by agent DID (from blockchain or demo)
   app.get<{ Params: { agentDID: string } }>('/score/:agentDID', async (request, reply) => {
     const { agentDID } = request.params;
 
@@ -165,20 +166,57 @@ async function buildApp(): Promise<FastifyInstance> {
       return reply.code(400).send({ error: 'Invalid agent DID format' });
     }
 
-    // This would typically query the blockchain
-    // For now, return a placeholder
+    // Try to get demo score, then blockchain
+    const { getDemoScore, getAllDemoScores } = await import('./services/demoService.js');
+    const demoScore = getDemoScore(agentDID);
+
+    if (demoScore) {
+      return reply.send({ success: true, data: demoScore });
+    }
+
+    // Return all demo scores for dashboard
+    if (agentDID === 'all') {
+      return reply.send({ success: true, data: getAllDemoScores() });
+    }
+
     return reply.send({
       message: 'Use /score endpoint to calculate new scores',
       agentDID,
-      note: 'Blockchain query not implemented in this endpoint',
     });
+  });
+
+  // Demo data endpoint
+  app.get('/demo/scores', async (request, reply) => {
+    const { loadDemoScores } = await import('./services/demoService.js');
+    await loadDemoScores();
+    const { getAllDemoScores } = await import('./services/demoService.js');
+    return reply.send({ success: true, data: getAllDemoScores() });
+  });
+
+  // Demo orders endpoint (for CAP integration demo)
+  app.get('/demo/orders', async (request, reply) => {
+    const { DEMO_ORDERS } = await import('./services/demoService.js');
+    return reply.send({ success: true, data: DEMO_ORDERS });
   });
 
   // Webhook endpoint for score updates
   app.post<{ Body: { event: string; agentDID: string; score?: any } }>('/webhook/score-update', async (request, reply) => {
     const { event, agentDID, score } = request.body;
-    logger.info({ event, agentDID }, 'Received score update webhook');
+    logger().info({ event, agentDID }, 'Received score update webhook');
     // Process webhook (notify downstream services, update cache, etc.)
+    return reply.send({ received: true });
+  });
+
+  // CAP webhook endpoint for loan repayments
+  app.post<{ Body: { order_id: string; amount: string; status: string } }>('/webhook/cap-order', async (request, reply) => {
+    const { order_id, amount, status } = request.body;
+    logger().info({ orderId: order_id, amount, status }, 'Received CAP order webhook');
+
+    // Handle CAP order events (loan disbursement/repayment)
+    if (status === 'paid' && order_id) {
+      await capService.handleLoanRepayment(order_id, BigInt(amount));
+    }
+
     return reply.send({ received: true });
   });
 
@@ -201,19 +239,28 @@ async function start() {
     // Initialize job queue
     await initializeQueue();
 
+    // Initialize CAP WebSocket connection
+    await capService.connectWebSocket();
+
+    // Register AgentLend DID if configured
+    if (config.CROO_AGENT_DID) {
+      await capService.registerAgentLendDID();
+    }
+
     const app = await buildApp();
 
     await app.listen({ port: config.PORT, host: config.HOST });
 
-    logger.info(
+    logger().info(
       { port: config.PORT, host: config.HOST, env: config.NODE_ENV },
       '🚀 AgentLend ML Oracle started'
     );
-    logger.info(`📚 API Documentation: http://${config.HOST}:${config.PORT}/docs`);
-    logger.info(`💚 Health Check: http://${config.HOST}:${config.PORT}/health`);
-    logger.info(`📊 Metrics: http://${config.HOST}:${config.PORT}/metrics`);
+    logger().info(`📚 API Documentation: http://${config.HOST}:${config.PORT}/docs`);
+    logger().info(`💚 Health Check: http://${config.HOST}:${config.PORT}/health`);
+    logger().info(`📊 Metrics: http://${config.HOST}:${config.PORT}/metrics`);
+    logger().info(`🔗 CAP Webhook: http://${config.HOST}:${config.PORT}/webhook/cap-order`);
   } catch (err) {
-    logger.error({ err }, 'Failed to start server');
+    logger().error({ err }, 'Failed to start server');
     process.exit(1);
   }
 }

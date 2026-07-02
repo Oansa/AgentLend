@@ -2,7 +2,12 @@
   "name": "agentlend",
   "version": "1.0.0",
   "description": "AgentLend - Algorithmic A2A Credit Protocol for CROO Network",
-  "private": true,
+  "private": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Oansa/AgentLend.git"
+  },
   "workspaces": [
     "contracts",
     "ml-oracle",
