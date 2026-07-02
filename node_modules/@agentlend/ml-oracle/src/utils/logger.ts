@@ -9,9 +9,12 @@ function getLogger(): pino.Logger {
     const logLevel = config.LOG_LEVEL || 'info';
     const logPretty = config.LOG_PRETTY !== false;
 
+    // Don't use pino-pretty in test environment (it can fail)
+    const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+
     loggerInstance = pino({
       level: logLevel,
-      transport: logPretty ? {
+      transport: !isTest && logPretty ? {
         target: 'pino-pretty',
         options: {
           colorize: true,

@@ -21,8 +21,8 @@ export async function initializeQueue(): Promise<void> {
       retryStrategy: (times) => Math.min(times * 100, 3000),
     });
 
-    redis.on('connect', () => logger.info('Redis connected'));
-    redis.on('error', (err) => logger.error({ err }, 'Redis error'));
+    redis.on('connect', () => logger().info('Redis connected'));
+    redis.on('error', (err) => logger().error({ err }, 'Redis error'));
 
     // Create queue
     scoreQueue = new Queue<ScoreJobData>('score-calculation', { connection: redis });
@@ -41,16 +41,16 @@ export async function initializeQueue(): Promise<void> {
     );
 
     scoreWorker.on('completed', (job) => {
-      logger.info({ jobId: job.id, agentDID: job.data.agentDID }, 'Score job completed');
+      logger().info({ jobId: job.id, agentDID: job.data.agentDID }, 'Score job completed');
     });
 
     scoreWorker.on('failed', (job, err) => {
-      logger.error({ jobId: job?.id, error: err }, 'Score job failed');
+      logger().error({ jobId: job?.id, error: err }, 'Score job failed');
     });
 
-    logger.info('Job queue initialized');
+    logger().info('Job queue initialized');
   } catch (error) {
-    logger.error({ error }, 'Failed to initialize job queue');
+    logger().error({ error }, 'Failed to initialize job queue');
     throw error;
   }
 }
@@ -58,7 +58,7 @@ export async function initializeQueue(): Promise<void> {
 async function processScoreJob(job: Job<ScoreJobData>): Promise<ScoreJobResult> {
   const { agentDID, walletAddress, requestId, priority } = job.data;
 
-  logger.info({ agentDID, requestId, priority }, 'Processing score calculation job');
+  logger().info({ agentDID, requestId, priority }, 'Processing score calculation job');
 
   try {
     // Update job progress
@@ -81,7 +81,7 @@ async function processScoreJob(job: Job<ScoreJobData>): Promise<ScoreJobResult> 
       if (result.success) {
         txHash = result.txHash;
       } else {
-        logger.warn({ agentDID, error: result.error }, 'Failed to push score to blockchain');
+        logger().warn({ agentDID, error: result.error }, 'Failed to push score to blockchain');
       }
     }
 
@@ -89,7 +89,7 @@ async function processScoreJob(job: Job<ScoreJobData>): Promise<ScoreJobResult> 
 
     return { success: true, score };
   } catch (error) {
-    logger.error({ error, agentDID, requestId }, 'Score calculation failed');
+    logger().error({ error, agentDID, requestId }, 'Score calculation failed');
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -107,7 +107,7 @@ export async function enqueueScoreCalculation(data: ScoreJobData): Promise<strin
     removeOnFail: 50,
   });
 
-  logger.info({ jobId: job.id, agentDID: data.agentDID }, 'Score calculation enqueued');
+  logger().info({ jobId: job.id, agentDID: data.agentDID }, 'Score calculation enqueued');
   return job.id!;
 }
 
@@ -153,15 +153,15 @@ export async function getQueueStats(): Promise<{
 export async function shutdownQueue(): Promise<void> {
   if (scoreWorker) {
     await scoreWorker.close();
-    logger.info('Score worker closed');
+    logger().info('Score worker closed');
   }
   if (scoreQueue) {
     await scoreQueue.close();
-    logger.info('Score queue closed');
+    logger().info('Score queue closed');
   }
   if (redis) {
     await redis.quit();
-    logger.info('Redis connection closed');
+    logger().info('Redis connection closed');
   }
 }
 

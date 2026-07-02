@@ -23,17 +23,17 @@ export class BlockchainService {
 
   private initialize(): void {
     if (!config.RPC_URL) {
-      logger.warn('RPC_URL not configured, blockchain service disabled');
+      logger().warn('RPC_URL not configured, blockchain service disabled');
       return;
     }
 
     try {
       this.provider = new ethers.JsonRpcProvider(config.RPC_URL);
-      logger.info({ rpcUrl: config.RPC_URL }, 'Blockchain provider initialized');
+      logger().info({ rpcUrl: config.RPC_URL }, 'Blockchain provider initialized');
 
       if (config.PRIVATE_KEY) {
         this.wallet = new ethers.Wallet(config.PRIVATE_KEY, this.provider);
-        logger.info({ address: this.wallet.address }, 'Oracle wallet initialized');
+        logger().info({ address: this.wallet.address }, 'Oracle wallet initialized');
       }
 
       if (config.ACS_ORACLE_ADDRESS && this.wallet) {
@@ -42,10 +42,10 @@ export class BlockchainService {
           BlockchainService.ACS_ORACLE_ABI,
           this.wallet
         );
-        logger.info({ address: config.ACS_ORACLE_ADDRESS }, 'ACS Oracle contract connected');
+        logger().info({ address: config.ACS_ORACLE_ADDRESS }, 'ACS Oracle contract connected');
       }
     } catch (error) {
-      logger.error({ error }, 'Failed to initialize blockchain service');
+      logger().error({ error }, 'Failed to initialize blockchain service');
     }
   }
 
@@ -72,7 +72,7 @@ export class BlockchainService {
       // Sign with oracle signer
       const signature = await this.wallet.signMessage(ethers.getBytes(digest));
 
-      logger.info(
+      logger().info(
         { agentDID: score.agentDID, score: score.score, txHash: 'pending' },
         'Submitting score to ACS Oracle'
       );
@@ -95,7 +95,7 @@ export class BlockchainService {
 
       return { success: true, txHash: receipt?.hash };
     } catch (error) {
-      logger.error({ error, agentDID: score.agentDID }, 'Failed to push score to blockchain');
+      logger().error({ error, agentDID: score.agentDID }, 'Failed to push score to blockchain');
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
@@ -122,7 +122,7 @@ export class BlockchainService {
         expiry: Number(expiry),
       };
     } catch (error) {
-      logger.error({ error, agentDID }, 'Failed to fetch score from oracle');
+      logger().error({ error, agentDID }, 'Failed to fetch score from oracle');
       return null;
     }
   }
@@ -139,7 +139,7 @@ export class BlockchainService {
       const agentDIDBytes32 = ethers.keccak256(ethers.toUtf8Bytes(agentDID));
       return await this.acsOracleContract.hasValidScore(agentDIDBytes32);
     } catch (error) {
-      logger.error({ error, agentDID }, 'Failed to check score validity');
+      logger().error({ error, agentDID }, 'Failed to check score validity');
       return false;
     }
   }
@@ -155,7 +155,7 @@ export class BlockchainService {
     try {
       return await this.acsOracleContract.oracleSigner();
     } catch (error) {
-      logger.error({ error }, 'Failed to get oracle signer');
+      logger().error({ error }, 'Failed to get oracle signer');
       return null;
     }
   }
@@ -172,7 +172,7 @@ export class BlockchainService {
       await this.provider.getBlockNumber();
       return true;
     } catch (error) {
-      logger.error({ error }, 'Blockchain health check failed');
+      logger().error({ error }, 'Blockchain health check failed');
       return false;
     }
   }

@@ -3,6 +3,39 @@ import { logger } from '../utils/logger.js';
 import type { ScoreInput, ACSScore, AgentDID } from '../types/index.js';
 import { ethers } from 'ethers';
 
+export const SCORE_THRESHOLDS = {
+  EXCELLENT: 800,
+  GOOD: 700,
+  FAIR: 600,
+  POOR: 500,
+} as const;
+
+interface ScoringFactors {
+  transactionActivity: number;
+  volume: number;
+  counterpartyDiversity: number;
+  accountAge: number;
+  tokenDiversity: number;
+  defiEngagement: number;
+  lendingHistory: number;
+  reputation: number;
+  kyc: number;
+  socialProof: number;
+}
+
+export const SCORING_WEIGHTS = {
+  transactionActivity: 0.15,
+  volume: 0.20,
+  counterpartyDiversity: 0.10,
+  accountAge: 0.10,
+  tokenDiversity: 0.05,
+  defiEngagement: 0.10,
+  lendingHistory: 0.15,
+  reputation: 0.10,
+  kyc: 0.05,
+  socialProof: 0.10,
+} as const;
+
 export class ScoringEngine {
   private provider: ethers.JsonRpcProvider | null = null;
 

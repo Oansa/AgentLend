@@ -1,6 +1,5 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { scoringEngine } from './scoringEngine.js';
-import { SCORE_THRESHOLDS } from './scoringEngine.js';
+import { describe, it, expect } from 'vitest';
+import { scoringEngine, ScoringEngine, SCORE_THRESHOLDS } from './scoringEngine.js';
 
 describe('ScoringEngine', () => {
   const mockAgentDID = 'did:croo:testagent123';
@@ -109,6 +108,3 @@ describe('ScoringEngine', () => {
     expect(ScoringEngine.getCollateralRatio(400)).toBe(4000); // 40%
   });
 });
-
-// Need to import the class for static methods
-import { ScoringEngine } from '../src/services/scoringEngine.js';

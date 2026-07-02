@@ -36,7 +36,6 @@ export const ScoreInputSchema = z.object({
     tokenDiversity: z.number().int().nonnegative(),
     defiInteractions: z.number().int().nonnegative(),
     lendingHistory: z.object({
-      : z.object({
       loansCount: z.number().int().nonnegative(),
       repaidOnTime: z.number().int().nonnegative(),
       defaulted: z.number().int().nonnegative(),

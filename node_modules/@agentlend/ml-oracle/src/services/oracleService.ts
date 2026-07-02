@@ -53,7 +53,7 @@ export class OracleService {
     metrics.recordRequest(0); // Will update after
 
     try {
-      logger.info({ agentDID: input.agentDID, requestId }, 'Score calculation requested');
+      logger().info({ agentDID: input.agentDID, requestId }, 'Score calculation requested');
 
       const score = await scoringEngine.calculateScore(input);
 
@@ -67,13 +67,13 @@ export class OracleService {
         timestamp: Date.now(),
       };
 
-      logger.info({ agentDID: input.agentDID, score: score.score, requestId }, 'Score calculated successfully');
+      logger().info({ agentDID: input.agentDID, score: score.score, requestId }, 'Score calculated successfully');
       return response;
     } catch (error) {
       metrics.recordError();
       metrics.recordRequest(Date.now() - startTime);
 
-      logger.error({ error, agentDID: input.agentDID, requestId }, 'Score calculation failed');
+      logger().error({ error, agentDID: input.agentDID, requestId }, 'Score calculation failed');
 
       return {
         success: false,
