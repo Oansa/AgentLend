@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { formatCurrency, formatNumber, getScoreColor, getScoreLabel, getCollateralRatio } from '../lib/utils';
+import { cn, formatCurrency, formatNumber, getScoreColor, getScoreLabel, getCollateralRatio } from '../lib/utils';
 import { TrendingUp, TrendingDown, Wallet, Users, FileText, Target, DollarSign, Plus } from 'lucide-react';
 import { useProtocolStats, useRecentLoans } from '../lib/contractHooks';
 import { useState } from 'react';

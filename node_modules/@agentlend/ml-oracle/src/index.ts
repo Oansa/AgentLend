@@ -6,6 +6,7 @@ import { initializeQueue, shutdownQueue } from './services/queueService.js';
 import { capService } from './services/capService.js';
 import type { ScoreInput, AgentDID, ScoreResponse, HealthResponse, MetricsData } from './types/index.js';
 import { z } from 'zod';
+import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from '@fastify/type-provider-zod';
 
 // Request schemas for validation
 const ScoreRequestSchema = z.object({
@@ -46,7 +47,9 @@ const EnqueueScoreSchema = z.object({
   agentDID: z.string().regex(/^did:croo:[a-zA-Z0-9_-]+$/),
   walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   priority: z.enum(['low', 'normal', 'high']).default('normal'),
-}).merge(ScoreRequestSchema.shape);
+  onChainData: ScoreRequestSchema.shape.onChainData,
+  offChainData: ScoreRequestSchema.shape.offChainData,
+});
 
 async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -54,7 +57,10 @@ async function buildApp(): Promise<FastifyInstance> {
     ajv: {
       customOptions: { strict: false },
     },
-  });
+  }).withTypeProvider<ZodTypeProvider>();
+
+  app.setValidatorCompiler(validatorCompiler);
+  app.setSerializerCompiler(serializerCompiler);
 
   // Security headers
   await app.register(import('@fastify/helmet'), {

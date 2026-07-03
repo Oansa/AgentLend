@@ -4,7 +4,6 @@ import { Header } from './components/layout/Header';
 import { Dashboard } from './pages/Dashboard';
 import { Loans } from './pages/Loans';
 import { Agents } from './pages/Agents';
-import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
 import { useStore } from './store/useStore';
 
@@ -22,7 +21,6 @@ function Layout() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/loans" element={<Loans />} />
             <Route path="/agents" element={<Agents />} />
-            <Route path="/analytics" element={<Analytics />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

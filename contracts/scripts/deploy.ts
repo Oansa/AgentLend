@@ -13,6 +13,10 @@ async function main() {
   const BASE_TOKEN = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; // USDC on Base Sepolia
   const ORACLE_SIGNER = deployer.address; // In production, use a dedicated oracle signer
 
+  // Check if we're on a local network (hardhat/anvil)
+  const network = await ethers.provider.getNetwork();
+  const isLocalNetwork = network.chainId === 31337n || network.chainId === 1337n;
+
   // 1. Deploy ACS Oracle
   console.log("📝 Deploying ACSOracle...");
   const ACSOracle = await ethers.getContractFactory("ACSOracle");
@@ -42,16 +46,52 @@ async function main() {
   await collateralManager.setLendingPool(lendingPoolAddress);
   console.log("✅ LendingPool set in CollateralManager\n");
 
-  // 5. Add supported collateral tokens (example: WETH, cbETH)
-  // These would be actual token addresses on Base Sepolia
-  const WETH_SEPOLIA = "0x4200000000000000000000000000000000000006"; // WETH on Base Sepolia
-  const CBETH_SEPOLIA = "0x..."; // cbETH on Base Sepolia (placeholder)
+  // 5. Add supported collateral tokens
+  let wethAddress: string;
+  let mockWethDeployed = false;
+
+  if (isLocalNetwork) {
+    // Deploy MockWETH for local testing
+    console.log("📝 Deploying MockWETH for local testing...");
+    const MockERC20 = await ethers.getContractFactory("MockERC20");
+    const mockWeth = await MockERC20.deploy("Wrapped Ether", "WETH", 18);
+    await mockWeth.waitForDeployment();
+    wethAddress = await mockWeth.getAddress();
+    mockWethDeployed = true;
+    console.log(`✅ MockWETH deployed to: ${wethAddress}\n`);
+
+    // Mint some WETH to deployer for testing
+    await mockWeth.mint(deployer.address, ethers.parseEther("1000"));
+    console.log("✅ Minted 1000 WETH to deployer\n");
+  } else {
+    // Use real WETH on Base Sepolia/Mainnet
+    wethAddress = "0x4200000000000000000000000000000000000006"; // WETH on Base
+  }
 
   console.log("⚙️ Adding supported collateral tokens...");
-  await collateralManager.setCollateralToken(WETH_SEPOLIA, true);
-  console.log(`✅ Added WETH (${WETH_SEPOLIA}) as collateral token`);
+  await collateralManager.setCollateralToken(wethAddress, true);
+  console.log(`✅ Added WETH (${wethAddress}) as collateral token`);
 
-  // 6. Verify ACS Oracle has correct signer
+  // Also add a mock USDC if local
+  let usdcAddress = BASE_TOKEN;
+  if (isLocalNetwork) {
+    console.log("📝 Deploying MockUSDC for local testing...");
+    const MockERC20 = await ethers.getContractFactory("MockERC20");
+    const mockUsdc = await MockERC20.deploy("USD Coin", "USDC", 6);
+    await mockUsdc.waitForDeployment();
+    usdcAddress = await mockUsdc.getAddress();
+    console.log(`✅ MockUSDC deployed to: ${usdcAddress}\n`);
+
+    // Mint some USDC to deployer for testing
+    await mockUsdc.mint(deployer.address, ethers.parseUnits("1000000", 6));
+    console.log("✅ Minted 1,000,000 USDC to deployer\n");
+
+    // Add USDC as collateral token
+    await collateralManager.setCollateralToken(usdcAddress, true);
+    console.log(`✅ Added USDC (${usdcAddress}) as collateral token`);
+  }
+
+  // 6. Verify deployments
   console.log("\n🔍 Verifying deployments...");
   const oracleSigner = await acsOracle.oracleSigner();
   console.log(`ACSOracle signer: ${oracleSigner}`);
@@ -64,19 +104,22 @@ async function main() {
 
   // 7. Save deployment addresses
   const deployment = {
-    network: (await ethers.provider.getNetwork()).name,
-    chainId: (await ethers.provider.getNetwork()).chainId,
+    network: network.name,
+    chainId: network.chainId.toString(),
     deployer: deployer.address,
     timestamp: new Date().toISOString(),
     contracts: {
       ACSOracle: acsOracleAddress,
       CollateralManager: collateralManagerAddress,
       LendingPool: lendingPoolAddress,
-      BaseToken: BASE_TOKEN,
+      BaseToken: isLocalNetwork ? usdcAddress : BASE_TOKEN,
+      WETH: wethAddress,
+      USDC: isLocalNetwork ? usdcAddress : BASE_TOKEN,
     },
     configuration: {
       oracleSigner: ORACLE_SIGNER,
-      collateralTokens: [WETH_SEPOLIA],
+      collateralTokens: [wethAddress, ...(isLocalNetwork ? [usdcAddress] : [])],
+      mockTokensDeployed: mockWethDeployed,
     },
   };
 
@@ -94,7 +137,15 @@ async function main() {
   console.log(`   ACSOracle: ${acsOracleAddress}`);
   console.log(`   CollateralManager: ${collateralManagerAddress}`);
   console.log(`   LendingPool: ${lendingPoolAddress}`);
-  console.log(`   Base Token (USDC): ${BASE_TOKEN}`);
+  console.log(`   Base Token (USDC): ${isLocalNetwork ? usdcAddress : BASE_TOKEN}`);
+  console.log(`   WETH: ${wethAddress}`);
+
+  if (isLocalNetwork) {
+    console.log("\n🔧 Local network detected - Mock Tokens:");
+    console.log(`   MockUSDC (6 decimals): ${usdcAddress}`);
+    console.log(`   MockWETH (18 decimals): ${wethAddress}`);
+    console.log("   Both minted to deployer for testing!");
+  }
 }
 
 main()

@@ -1,5 +1,7 @@
-import { Menu, Sun, Moon, Bell, User, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, Sun, Moon, Bell, User, LogOut, ChevronDown, Wallet, ExternalLink } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { useWallet } from '../../context/WalletContext';
+import { Button } from '../ui/Button';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -7,6 +9,22 @@ interface HeaderProps {
 
 export function Header({ onMenuClick }: HeaderProps) {
   const { theme, toggleTheme, network, setNetwork } = useStore();
+  const { address, isConnected, isConnecting, chainId, balance, connect, disconnect, switchChain, formatAddress } = useWallet();
+
+  const targetChainId = parseInt(import.meta.env.VITE_CHAIN_ID || '11155111');
+  const isWrongChain = isConnected && chainId !== targetChainId;
+
+  const handleConnect = async () => {
+    await connect();
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+  };
+
+  const handleSwitchChain = async () => {
+    await switchChain(targetChainId);
+  };
 
   return (
     <header className="sticky top-0 z-40 h-16 bg-background/95 backdrop-blur border-b">
@@ -46,16 +64,50 @@ export function Header({ onMenuClick }: HeaderProps) {
           </button>
 
           <div className="flex items-center gap-2 pl-3 border-l">
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-              <User className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <div className="hidden md:block text-right">
-              <p className="text-sm font-medium">0x1234...5678</p>
-              <p className="text-xs text-muted-foreground">Connected</p>
-            </div>
-            <button className="p-1 rounded hover:bg-accent" aria-label="Account menu">
-              <ChevronDown className="h-4 w-4" />
-            </button>
+            {isConnected ? (
+              <div className="flex items-center gap-3">
+                {isWrongChain && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSwitchChain}
+                    className="gap-1 text-amber-600 border-amber-300 hover:bg-amber-50"
+                  >
+                    <span className="text-xs">Wrong Chain</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </Button>
+                )}
+
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Wallet className="h-4 w-4 text-primary" />
+                </div>
+                <div className="hidden md:block text-right">
+                  <p className="text-sm font-medium font-mono">{formatAddress(address || '')}</p>
+                  {balance && (
+                    <p className="text-xs text-muted-foreground">{parseFloat(balance).toFixed(4)} ETH</p>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDisconnect}
+                  className="h-8"
+                  aria-label="Disconnect wallet"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                onClick={handleConnect}
+                disabled={isConnecting}
+                className="gap-2"
+              >
+                <Wallet className="h-4 w-4" />
+                {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+              </Button>
+            )}
           </div>
         </div>
       </div>

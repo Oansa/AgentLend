@@ -17,7 +17,7 @@ export async function initializeQueue(): Promise<void> {
       port: config.REDIS_PORT,
       password: config.REDIS_PASSWORD || undefined,
       db: config.REDIS_DB,
-      maxRetriesPerRequest: 3,
+      maxRetriesPerRequest: null,
       retryStrategy: (times) => Math.min(times * 100, 3000),
     });
 

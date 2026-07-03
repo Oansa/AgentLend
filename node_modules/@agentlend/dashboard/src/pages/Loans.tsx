@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import { cn, formatCurrency, formatAddress, getScoreColor, getScoreLabel } from '../lib/utils';
 import { Search, Filter, ChevronDown, ChevronUp, FileText, Download, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
+import { CreateLoanModal } from '../components/modals/CreateLoanModal';
 
 const mockLoans = [
   { id: 'LN-001', borrower: 'did:croo:agent001', lender: '0x1234...5678', principal: 50000, interestRate: 12.5, startDate: '2026-01-15', maturity: '2026-04-15', collateralToken: 'WETH', collateralAmount: 2.5, status: 'Active', score: 780, outstanding: 51250 },
@@ -20,8 +21,15 @@ export function Loans() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'startDate', direction: 'desc' });
+  const [showCreateLoanModal, setShowCreateLoanModal] = useState(false);
 
   const statuses = ['all', 'Active', 'Repaid', 'Liquidated', 'Defaulted'];
+
+  const handleLoanCreated = (loanId: string) => {
+    console.log('Loan created:', loanId);
+    // Optionally refresh the loans list here
+    setShowCreateLoanModal(false);
+  };
 
   const filteredLoans = mockLoans
     .filter((loan) => {
@@ -65,7 +73,7 @@ export function Loans() {
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" /> Export
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setShowCreateLoanModal(true)}>
             <FileText className="h-4 w-4 mr-2" /> New Loan
           </Button>
         </div>
@@ -185,6 +193,12 @@ export function Loans() {
           </div>
         </CardContent>
       </Card>
+
+      <CreateLoanModal
+        isOpen={showCreateLoanModal}
+        onClose={() => setShowCreateLoanModal(false)}
+        onSuccess={handleLoanCreated}
+      />
     </div>
   );
 }
