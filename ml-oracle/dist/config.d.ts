@@ -23,6 +23,12 @@ declare const envSchema: z.ZodObject<{
     COINGECKO_API_KEY: z.ZodOptional<z.ZodString>;
     ALCHEMY_API_KEY: z.ZodOptional<z.ZodString>;
     MORALIS_API_KEY: z.ZodOptional<z.ZodString>;
+    CAP_API_URL: z.ZodOptional<z.ZodString>;
+    CAP_WS_URL: z.ZodOptional<z.ZodString>;
+    CAP_API_KEY: z.ZodOptional<z.ZodString>;
+    CROO_AGENT_DID: z.ZodOptional<z.ZodString>;
+    CROO_API_URL: z.ZodOptional<z.ZodString>;
+    CROO_WS_URL: z.ZodOptional<z.ZodString>;
     RATE_LIMIT_MAX: z.ZodDefault<z.ZodNumber>;
     RATE_LIMIT_WINDOW_MS: z.ZodDefault<z.ZodNumber>;
     METRICS_ENABLED: z.ZodDefault<z.ZodBoolean>;
@@ -55,6 +61,12 @@ declare const envSchema: z.ZodObject<{
     COINGECKO_API_KEY?: string | undefined;
     ALCHEMY_API_KEY?: string | undefined;
     MORALIS_API_KEY?: string | undefined;
+    CAP_API_URL?: string | undefined;
+    CAP_WS_URL?: string | undefined;
+    CAP_API_KEY?: string | undefined;
+    CROO_AGENT_DID?: string | undefined;
+    CROO_API_URL?: string | undefined;
+    CROO_WS_URL?: string | undefined;
 }, {
     PORT?: number | undefined;
     HOST?: string | undefined;
@@ -79,6 +91,12 @@ declare const envSchema: z.ZodObject<{
     COINGECKO_API_KEY?: string | undefined;
     ALCHEMY_API_KEY?: string | undefined;
     MORALIS_API_KEY?: string | undefined;
+    CAP_API_URL?: string | undefined;
+    CAP_WS_URL?: string | undefined;
+    CAP_API_KEY?: string | undefined;
+    CROO_AGENT_DID?: string | undefined;
+    CROO_API_URL?: string | undefined;
+    CROO_WS_URL?: string | undefined;
     RATE_LIMIT_MAX?: number | undefined;
     RATE_LIMIT_WINDOW_MS?: number | undefined;
     METRICS_ENABLED?: boolean | undefined;
@@ -108,6 +126,12 @@ export declare const config: {
     readonly COINGECKO_API_KEY: string | undefined;
     readonly ALCHEMY_API_KEY: string | undefined;
     readonly MORALIS_API_KEY: string | undefined;
+    readonly CAP_API_URL: string | undefined;
+    readonly CAP_WS_URL: string | undefined;
+    readonly CAP_API_KEY: string | undefined;
+    readonly CROO_AGENT_DID: string | undefined;
+    readonly CROO_API_URL: string | undefined;
+    readonly CROO_WS_URL: string | undefined;
     readonly RATE_LIMIT_MAX: number;
     readonly RATE_LIMIT_WINDOW_MS: number;
     readonly METRICS_ENABLED: boolean;

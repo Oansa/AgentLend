@@ -8,7 +8,9 @@ const config_js_1 = require("./config.js");
 const logger_js_1 = require("./utils/logger.js");
 const oracleService_js_1 = require("./services/oracleService.js");
 const queueService_js_1 = require("./services/queueService.js");
+const capService_js_1 = require("./services/capService.js");
 const zod_1 = require("zod");
+const type_provider_zod_1 = require("@fastify/type-provider-zod");
 // Request schemas for validation
 const ScoreRequestSchema = zod_1.z.object({
     agentDID: zod_1.z.string().regex(/^did:croo:[a-zA-Z0-9_-]+$/),
@@ -47,14 +49,18 @@ const EnqueueScoreSchema = zod_1.z.object({
     agentDID: zod_1.z.string().regex(/^did:croo:[a-zA-Z0-9_-]+$/),
     walletAddress: zod_1.z.string().regex(/^0x[a-fA-F0-9]{40}$/),
     priority: zod_1.z.enum(['low', 'normal', 'high']).default('normal'),
-}).merge(ScoreRequestSchema.shape);
+    onChainData: ScoreRequestSchema.shape.onChainData,
+    offChainData: ScoreRequestSchema.shape.offChainData,
+});
 async function buildApp() {
     const app = (0, fastify_1.default)({
         logger: logger_js_1.logger,
         ajv: {
             customOptions: { strict: false },
         },
-    });
+    }).withTypeProvider();
+    app.setValidatorCompiler(type_provider_zod_1.validatorCompiler);
+    app.setSerializerCompiler(type_provider_zod_1.serializerCompiler);
     // Security headers
     await app.register(import('@fastify/helmet'), {
         contentSecurityPolicy: false, // Disable for API
@@ -142,25 +148,54 @@ async function buildApp() {
         }
         return reply.send(status);
     });
-    // Get score by agent DID (from blockchain)
+    // Get score by agent DID (from blockchain or demo)
     app.get('/score/:agentDID', async (request, reply) => {
         const { agentDID } = request.params;
         if (!zod_1.z.string().regex(/^did:croo:[a-zA-Z0-9_-]+$/).safeParse(agentDID).success) {
             return reply.code(400).send({ error: 'Invalid agent DID format' });
         }
-        // This would typically query the blockchain
-        // For now, return a placeholder
+        // Try to get demo score, then blockchain
+        const { getDemoScore, getAllDemoScores } = await import('./services/demoService.js');
+        const demoScore = getDemoScore(agentDID);
+        if (demoScore) {
+            return reply.send({ success: true, data: demoScore });
+        }
+        // Return all demo scores for dashboard
+        if (agentDID === 'all') {
+            return reply.send({ success: true, data: getAllDemoScores() });
+        }
         return reply.send({
             message: 'Use /score endpoint to calculate new scores',
             agentDID,
-            note: 'Blockchain query not implemented in this endpoint',
         });
+    });
+    // Demo data endpoint
+    app.get('/demo/scores', async (request, reply) => {
+        const { loadDemoScores } = await import('./services/demoService.js');
+        await loadDemoScores();
+        const { getAllDemoScores } = await import('./services/demoService.js');
+        return reply.send({ success: true, data: getAllDemoScores() });
+    });
+    // Demo orders endpoint (for CAP integration demo)
+    app.get('/demo/orders', async (request, reply) => {
+        const { DEMO_ORDERS } = await import('./services/demoService.js');
+        return reply.send({ success: true, data: DEMO_ORDERS });
     });
     // Webhook endpoint for score updates
     app.post('/webhook/score-update', async (request, reply) => {
         const { event, agentDID, score } = request.body;
-        logger_js_1.logger.info({ event, agentDID }, 'Received score update webhook');
+        (0, logger_js_1.logger)().info({ event, agentDID }, 'Received score update webhook');
         // Process webhook (notify downstream services, update cache, etc.)
+        return reply.send({ received: true });
+    });
+    // CAP webhook endpoint for loan repayments
+    app.post('/webhook/cap-order', async (request, reply) => {
+        const { order_id, amount, status } = request.body;
+        (0, logger_js_1.logger)().info({ orderId: order_id, amount, status }, 'Received CAP order webhook');
+        // Handle CAP order events (loan disbursement/repayment)
+        if (status === 'paid' && order_id) {
+            await capService_js_1.capService.handleLoanRepayment(order_id, BigInt(amount));
+        }
         return reply.send({ received: true });
     });
     // Graceful shutdown
@@ -178,15 +213,22 @@ async function start() {
     try {
         // Initialize job queue
         await (0, queueService_js_1.initializeQueue)();
+        // Initialize CAP WebSocket connection
+        await capService_js_1.capService.connectWebSocket();
+        // Register AgentLend DID if configured
+        if (config_js_1.config.CROO_AGENT_DID) {
+            await capService_js_1.capService.registerAgentLendDID();
+        }
         const app = await buildApp();
         await app.listen({ port: config_js_1.config.PORT, host: config_js_1.config.HOST });
-        logger_js_1.logger.info({ port: config_js_1.config.PORT, host: config_js_1.config.HOST, env: config_js_1.config.NODE_ENV }, '🚀 AgentLend ML Oracle started');
-        logger_js_1.logger.info(`📚 API Documentation: http://${config_js_1.config.HOST}:${config_js_1.config.PORT}/docs`);
-        logger_js_1.logger.info(`💚 Health Check: http://${config_js_1.config.HOST}:${config_js_1.config.PORT}/health`);
-        logger_js_1.logger.info(`📊 Metrics: http://${config_js_1.config.HOST}:${config_js_1.config.PORT}/metrics`);
+        (0, logger_js_1.logger)().info({ port: config_js_1.config.PORT, host: config_js_1.config.HOST, env: config_js_1.config.NODE_ENV }, '🚀 AgentLend ML Oracle started');
+        (0, logger_js_1.logger)().info(`📚 API Documentation: http://${config_js_1.config.HOST}:${config_js_1.config.PORT}/docs`);
+        (0, logger_js_1.logger)().info(`💚 Health Check: http://${config_js_1.config.HOST}:${config_js_1.config.PORT}/health`);
+        (0, logger_js_1.logger)().info(`📊 Metrics: http://${config_js_1.config.HOST}:${config_js_1.config.PORT}/metrics`);
+        (0, logger_js_1.logger)().info(`🔗 CAP Webhook: http://${config_js_1.config.HOST}:${config_js_1.config.PORT}/webhook/cap-order`);
     }
     catch (err) {
-        logger_js_1.logger.error({ err }, 'Failed to start server');
+        (0, logger_js_1.logger)().error({ err }, 'Failed to start server');
         process.exit(1);
     }
 }

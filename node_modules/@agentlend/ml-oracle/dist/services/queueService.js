@@ -27,7 +27,7 @@ async function initializeQueue() {
             port: config_js_1.config.REDIS_PORT,
             password: config_js_1.config.REDIS_PASSWORD || undefined,
             db: config_js_1.config.REDIS_DB,
-            maxRetriesPerRequest: 3,
+            maxRetriesPerRequest: null,
             retryStrategy: (times) => Math.min(times * 100, 3000),
         });
         redis.on('connect', () => (0, logger_js_1.logger)().info('Redis connected'));
