@@ -26,6 +26,7 @@ declare const envSchema: z.ZodObject<{
     CAP_API_URL: z.ZodOptional<z.ZodString>;
     CAP_WS_URL: z.ZodOptional<z.ZodString>;
     CAP_API_KEY: z.ZodOptional<z.ZodString>;
+    CROO_API_KEY: z.ZodOptional<z.ZodString>;
     CROO_AGENT_DID: z.ZodOptional<z.ZodString>;
     CROO_API_URL: z.ZodOptional<z.ZodString>;
     CROO_WS_URL: z.ZodOptional<z.ZodString>;
@@ -64,6 +65,7 @@ declare const envSchema: z.ZodObject<{
     CAP_API_URL?: string | undefined;
     CAP_WS_URL?: string | undefined;
     CAP_API_KEY?: string | undefined;
+    CROO_API_KEY?: string | undefined;
     CROO_AGENT_DID?: string | undefined;
     CROO_API_URL?: string | undefined;
     CROO_WS_URL?: string | undefined;
@@ -94,6 +96,7 @@ declare const envSchema: z.ZodObject<{
     CAP_API_URL?: string | undefined;
     CAP_WS_URL?: string | undefined;
     CAP_API_KEY?: string | undefined;
+    CROO_API_KEY?: string | undefined;
     CROO_AGENT_DID?: string | undefined;
     CROO_API_URL?: string | undefined;
     CROO_WS_URL?: string | undefined;
@@ -130,6 +133,7 @@ export declare const config: {
     readonly CAP_WS_URL: string | undefined;
     readonly CAP_API_KEY: string | undefined;
     readonly CROO_AGENT_DID: string | undefined;
+    readonly CROO_API_KEY: string | undefined;
     readonly CROO_API_URL: string | undefined;
     readonly CROO_WS_URL: string | undefined;
     readonly RATE_LIMIT_MAX: number;

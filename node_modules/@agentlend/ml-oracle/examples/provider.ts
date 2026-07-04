@@ -36,6 +36,32 @@ interface CAPNegotiation {
   terms: any;
 }
 
+// Common schema definitions (extracted to avoid circular reference)
+const ON_CHAIN_DATA_SCHEMA = {
+  type: 'object',
+  properties: {
+    walletAddress: { type: 'string', pattern: '^0x[a-fA-F0-9]{40}$' },
+    transactionCount: { type: 'number' },
+    totalVolumeUSD: { type: 'number' },
+    uniqueCounterparties: { type: 'number' },
+    avgTransactionSizeUSD: { type: 'number' },
+    daysActive: { type: 'number' },
+    tokenDiversity: { type: 'number' },
+    defiInteractions: { type: 'number' },
+  },
+};
+
+const OFF_CHAIN_DATA_SCHEMA = {
+  type: 'object',
+  properties: {
+    reputationScore: { type: 'number', minimum: 0, maximum: 100 },
+    kycVerified: { type: 'boolean' },
+    twitterFollowers: { type: 'number' },
+    githubContributions: { type: 'number' },
+    domainExpertise: { type: 'array', items: { type: 'string' } },
+  },
+};
+
 // Your ML Oracle services to expose on CROO Agent Store
 const AGENT_SERVICES: ProviderService[] = [
   {
@@ -47,29 +73,8 @@ const AGENT_SERVICES: ProviderService[] = [
       properties: {
         agentDID: { type: 'string', pattern: '^did:croo:[a-zA-Z0-9_-]+$' },
         walletAddress: { type: 'string', pattern: '^0x[a-fA-F0-9]{40}$' },
-        onChainData: {
-          type: 'object',
-          properties: {
-            walletAddress: { type: 'string', pattern: '^0x[a-fA-F0-9]{40}$' },
-            transactionCount: { type: 'number' },
-            totalVolumeUSD: { type: 'number' },
-            uniqueCounterparties: { type: 'number' },
-            avgTransactionSizeUSD: { type: 'number' },
-            daysActive: { type: 'number' },
-            tokenDiversity: { type: 'number' },
-            defiInteractions: { type: 'number' },
-          },
-        },
-        offChainData: {
-          type: 'object',
-          properties: {
-            reputationScore: { type: 'number', minimum: 0, maximum: 100 },
-            kycVerified: { type: 'boolean' },
-            twitterFollowers: { type: 'number' },
-            githubContributions: { type: 'number' },
-            domainExpertise: { type: 'array', items: { type: 'string' } },
-          },
-        },
+        onChainData: ON_CHAIN_DATA_SCHEMA,
+        offChainData: OFF_CHAIN_DATA_SCHEMA,
       },
       required: ['agentDID', 'walletAddress'],
     },
@@ -146,8 +151,8 @@ const AGENT_SERVICES: ProviderService[] = [
         agentDID: { type: 'string', pattern: '^did:croo:[a-zA-Z0-9_-]+$' },
         walletAddress: { type: 'string', pattern: '^0x[a-fA-F0-9]{40}$' },
         priority: { type: 'string', enum: ['low', 'normal', 'high'] },
-        onChainData: AGENT_SERVICES[0].inputSchema.properties.onChainData,
-        offChainData: AGENT_SERVICES[0].inputSchema.properties.offChainData,
+        onChainData: ON_CHAIN_DATA_SCHEMA,
+        offChainData: OFF_CHAIN_DATA_SCHEMA,
       },
       required: ['agentDID', 'walletAddress'],
     },
@@ -173,25 +178,30 @@ class CROOProvider {
   private isRunning = false;
 
   constructor() {
-    // Validate required config
-    if (!config.CROO_AGENT_DID) {
+    // Validate required config - using config object getters
+    const agentDID = config.CROO_AGENT_DID;
+    const apiKey = config.CROO_API_KEY;
+    const apiUrl = config.CROO_API_URL;
+    const wsUrl = config.CROO_WS_URL;
+
+    if (!agentDID) {
       throw new Error('CROO_AGENT_DID not set in .env');
     }
-    if (!config.CROO_API_KEY) {
+    if (!apiKey) {
       throw new Error('CROO_API_KEY not set in .env');
     }
-    if (!config.CROO_API_URL) {
+    if (!apiUrl) {
       throw new Error('CROO_API_URL not set in .env');
     }
-    if (!config.CROO_WS_URL) {
+    if (!wsUrl) {
       throw new Error('CROO_WS_URL not set in .env');
     }
 
     this.config = {
-      agentDID: config.CROO_AGENT_DID,
-      apiKey: config.CROO_API_KEY,
-      apiUrl: config.CROO_API_URL,
-      wsUrl: config.CROO_WS_URL,
+      agentDID,
+      apiKey,
+      apiUrl,
+      wsUrl,
       services: AGENT_SERVICES,
     };
   }
