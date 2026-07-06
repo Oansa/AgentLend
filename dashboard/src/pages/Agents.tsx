@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { cn, formatCurrency, formatAddress, getScoreColor, getScoreLabel } from '../lib/utils';
+import { cn, formatCurrency, getScoreColor, getScoreLabel } from '../lib/utils';
 import { Search, Filter, ChevronDown, ChevronUp, User, Activity, TrendingUp, Download } from 'lucide-react';
 import { useState } from 'react';
 
@@ -24,7 +24,6 @@ export function Agents() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'score', direction: 'desc' });
 
-  const scoreRanges = ['all', 'excellent', 'good', 'fair', 'poor', 'very-poor'];
   const statuses = ['all', 'Active', 'Defaulted'];
 
   const filteredAgents = mockAgents

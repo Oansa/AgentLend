@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { cn, formatCurrency, formatAddress, getScoreColor, getScoreLabel } from '../lib/utils';
+import { cn, formatCurrency, getScoreColor, getScoreLabel } from '../lib/utils';
 import { Search, Filter, ChevronDown, ChevronUp, FileText, Download, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { CreateLoanModal } from '../components/modals/CreateLoanModal';

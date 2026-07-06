@@ -1,5 +1,5 @@
-import { NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronLeft, LayoutDashboard, FileText, Users, BarChart3, Settings, Globe, Shield, Wallet } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { Menu, X, LayoutDashboard, FileText, Users, BarChart3, Settings, Globe, Shield } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
 const navigation = [
@@ -11,7 +11,6 @@ const navigation = [
 ];
 
 export function Sidebar() {
-  const location = useLocation();
   const { isSidebarOpen, toggleSidebar } = useStore();
 
   return (
@@ -39,7 +38,6 @@ export function Sidebar() {
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto" aria-label="Main navigation">
         {navigation.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/');
           return (
             <NavLink
               key={item.name}

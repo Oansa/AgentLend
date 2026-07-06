@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { formatCurrency, getCollateralRatio, getScoreLabel } from './utils';
+import { getCollateralRatio, getScoreLabel } from './utils';
 
 // Contract ABIs (simplified for demo)
 const LENDING_POOL_ABI = [

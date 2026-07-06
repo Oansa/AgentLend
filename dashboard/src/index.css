@@ -2,54 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @layer base {
   :root {
+    /* AgentLend Brand Colors */
+    --brand-50: 220 100% 97%;
+    --brand-100: 220 100% 93%;
+    --brand-200: 220 90% 85%;
+    --brand-300: 220 85% 72%;
+    --brand-400: 220 80% 58%;
+    --brand-500: 220 90% 50%;
+    --brand-600: 220 95% 42%;
+    --brand-700: 220 95% 35%;
+    --brand-800: 220 90% 28%;
+    --brand-900: 220 85% 22%;
+    --brand-950500-glow: 220 90% 50% / 0.3;
+
+    /* Accent Colors */
+    --success: 142 76% 36%;
+    --success-bg: 142 76% 36% / 0.1;
+    --warning: 38 92% 50%;
+    --warning-bg: 38 92% 50% / 0.1;
+    --danger: 0 84% 60%;
+    --danger-bg: 0 84% 60% / 0.1;
+
+    /* Light Theme */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 220 15% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 199 89% 48%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 199 89% 48%;
-    --radius: 0.5rem;
+    --card-foreground: 220 15% 8%;
+    --card-border: 220 15% 90%;
+    --muted: 220 15% 96%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 220 90% 97%;
+    --accent-foreground: 220 95% 35%;
+    --border: 220 15% 90%;
+    --input: 220 15% 90%;
+    --ring: 220 90% 50%;
+    --radius: 0.75rem;
+
+    /* Sidebar */
+    --sidebar-bg: 0 0% 100%;
+    --sidebar-border: 220 15% 90%;
+    --sidebar-item-hover: 220 90% 97%;
+    --sidebar-item-active: 220 90% 94%;
+    --sidebar-text: 220 15% 35%;
+    --sidebar-text-muted: 220 10% 55%;
+    --sidebar-icon: 220 10% 55%;
+    --sidebar-icon-active: 220 90% 50%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 199 89% 48%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 199 89% 48%;
+    /* Dark Theme - AgentLend Pro Style */
+    --background: 225 20% 5%;
+    --foreground: 220 10% 95%;
+    --card: 225 20% 7%;
+    --card-foreground: 220 10% 95%;
+    --card-border: 220 15% 18%;
+    --muted: 220 15% 12%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 220 90% 15%;
+    --accent-foreground: 220 90% 60%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 220 90% 55%;
+
+    /* Sidebar Dark */
+    --sidebar-bg: 225 20% 6%;
+    --sidebar-border: 220 15% 15%;
+    --sidebar-item-hover: 220 90% 12%;
+    --sidebar-item-active: 220 90% 18%;
+    --sidebar-text: 220 10% 85%;
+    --sidebar-text-muted: 220 10% 55%;
+    --sidebar-icon: 220 10% 55%;
+    --sidebar-icon-active: 220 90% 60%;
   }
 }
 
@@ -57,27 +82,95 @@
   * {
     border-color: hsl(var(--border));
   }
+
   body {
     background: hsl(var(--background));
     color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
   }
 }
 
 @layer utilities {
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  /* Gradient utilities */
+  .gradient-brand {
+    background: linear-gradient(135deg, hsl(var(--brand-500)) 0%, hsl(var(--brand-700)) 100%);
   }
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  .gradient-brand-subtle {
+    background: linear-gradient(135deg, hsl(var(--brand-500) / 0.1) 0%, hsl(var(--brand-700) / 0.05) 100%);
   }
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
+  .gradient-card {
+    background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
   }
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 3px;
+  .gradient-glow {
+    box-shadow: 0 0 40px hsl(var(--brand-500-glow));
   }
+
+  /* Glass effect */
+  .glass {
+    background: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--card-border) / 0.5);
+  }
+  .glass-dark {
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--card-border) / 0.3);
+  }
+
+  /* Text gradients */
+  .text-gradient-brand {
+    background: linear-gradient(135deg, hsl(var(--brand-500)), hsl(var(--brand-400)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Animation */
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateX(-12px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px hsl(var(--brand-500-glow)); }
+    50% { box-shadow: 0 0 40px hsl(var(--brand-500-glow)); }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.4s ease-out forwards;
+  }
+  .animate-slide-in {
+    animation: slide-in 0.3s ease-out forwards;
+  }
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  /* Stagger animations */
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+  .stagger-5 { animation-delay: 0.25s; }
+  .stagger-6 { animation-delay: 0.3s; }
 }

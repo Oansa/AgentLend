@@ -1,4 +1,4 @@
-import { Menu, Sun, Moon, Bell, User, LogOut, ChevronDown, Wallet, ExternalLink } from 'lucide-react';
+import { Menu, Sun, Moon, Bell, LogOut, Wallet, ExternalLink } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { useWallet } from '../../context/WalletContext';
 import { Button } from '../ui/Button';
