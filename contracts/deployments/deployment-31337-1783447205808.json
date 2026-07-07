@@ -1,0 +1,22 @@
+{
+  "network": "localhost",
+  "chainId": "31337",
+  "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "timestamp": "2026-07-07T18:00:05.807Z",
+  "contracts": {
+    "ACSOracle": "0x2a810409872AfC346F9B5b26571Fd6eC42EA4849",
+    "CollateralManager": "0xb9bEECD1A582768711dE1EE7B0A1d582D9d72a6C",
+    "LendingPool": "0x8A93d247134d91e0de6f96547cB0204e5BE8e5D8",
+    "BaseToken": "0x5fc748f1FEb28d7b76fa1c6B07D8ba2d5535177c",
+    "WETH": "0xF32D39ff9f6Aa7a7A64d7a4F00a54826Ef791a55",
+    "USDC": "0x5fc748f1FEb28d7b76fa1c6B07D8ba2d5535177c"
+  },
+  "configuration": {
+    "oracleSigner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    "collateralTokens": [
+      "0xF32D39ff9f6Aa7a7A64d7a4F00a54826Ef791a55",
+      "0x5fc748f1FEb28d7b76fa1c6B07D8ba2d5535177c"
+    ],
+    "mockTokensDeployed": true
+  }
+}

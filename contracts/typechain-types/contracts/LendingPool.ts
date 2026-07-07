@@ -83,12 +83,15 @@ export interface LendingPoolInterface extends Interface {
       | "PROTOCOL_FEE_BPS"
       | "acsOracle"
       | "baseToken"
+      | "borrowerAddresses"
       | "borrowerLoans"
+      | "claimPrincipal"
       | "collateralManager"
       | "createLoan"
       | "createLoanWithCollateral"
       | "emergencyWithdraw"
       | "getBaseTokenBalance"
+      | "getBorrowerAddress"
       | "getBorrowerLoans"
       | "getLenderLoans"
       | "getLoan"
@@ -116,6 +119,7 @@ export interface LendingPoolInterface extends Interface {
       | "LoanRepaid"
       | "OwnershipTransferred"
       | "PoolPaused"
+      | "PrincipalClaimed"
       | "ProtocolFeeCollected"
   ): EventFragment;
 
@@ -150,8 +154,16 @@ export interface LendingPoolInterface extends Interface {
   encodeFunctionData(functionFragment: "acsOracle", values?: undefined): string;
   encodeFunctionData(functionFragment: "baseToken", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "borrowerAddresses",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "borrowerLoans",
     values: [BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "claimPrincipal",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "collateralManager",
@@ -159,12 +171,20 @@ export interface LendingPoolInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "createLoan",
-    values: [BytesLike, BigNumberish, BigNumberish, BigNumberish, AddressLike]
+    values: [
+      BytesLike,
+      AddressLike,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      AddressLike
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "createLoanWithCollateral",
     values: [
       BytesLike,
+      AddressLike,
       BigNumberish,
       BigNumberish,
       BigNumberish,
@@ -179,6 +199,10 @@ export interface LendingPoolInterface extends Interface {
   encodeFunctionData(
     functionFragment: "getBaseTokenBalance",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getBorrowerAddress",
+    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "getBorrowerLoans",
@@ -268,7 +292,15 @@ export interface LendingPoolInterface extends Interface {
   decodeFunctionResult(functionFragment: "acsOracle", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "baseToken", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "borrowerAddresses",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "borrowerLoans",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "claimPrincipal",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -286,6 +318,10 @@ export interface LendingPoolInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "getBaseTokenBalance",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getBorrowerAddress",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -483,6 +519,31 @@ export namespace PoolPausedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
+export namespace PrincipalClaimedEvent {
+  export type InputTuple = [
+    loanId: BigNumberish,
+    borrowerDID: BytesLike,
+    borrower: AddressLike,
+    amount: BigNumberish
+  ];
+  export type OutputTuple = [
+    loanId: bigint,
+    borrowerDID: string,
+    borrower: string,
+    amount: bigint
+  ];
+  export interface OutputObject {
+    loanId: bigint;
+    borrowerDID: string;
+    borrower: string;
+    amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export namespace ProtocolFeeCollectedEvent {
   export type InputTuple = [loanId: BigNumberish, feeAmount: BigNumberish];
   export type OutputTuple = [loanId: bigint, feeAmount: bigint];
@@ -557,10 +618,18 @@ export interface LendingPool extends BaseContract {
 
   baseToken: TypedContractMethod<[], [string], "view">;
 
+  borrowerAddresses: TypedContractMethod<[arg0: BytesLike], [string], "view">;
+
   borrowerLoans: TypedContractMethod<
     [arg0: BytesLike, arg1: BigNumberish],
     [bigint],
     "view"
+  >;
+
+  claimPrincipal: TypedContractMethod<
+    [loanId: BigNumberish],
+    [void],
+    "nonpayable"
   >;
 
   collateralManager: TypedContractMethod<[], [string], "view">;
@@ -568,6 +637,7 @@ export interface LendingPool extends BaseContract {
   createLoan: TypedContractMethod<
     [
       borrowerDID: BytesLike,
+      borrowerAddress: AddressLike,
       principalAmount: BigNumberish,
       interestRateBps: BigNumberish,
       duration: BigNumberish,
@@ -580,6 +650,7 @@ export interface LendingPool extends BaseContract {
   createLoanWithCollateral: TypedContractMethod<
     [
       borrowerDID: BytesLike,
+      borrowerAddress: AddressLike,
       principalAmount: BigNumberish,
       interestRateBps: BigNumberish,
       duration: BigNumberish,
@@ -597,6 +668,12 @@ export interface LendingPool extends BaseContract {
   >;
 
   getBaseTokenBalance: TypedContractMethod<[], [bigint], "view">;
+
+  getBorrowerAddress: TypedContractMethod<
+    [borrowerDID: BytesLike],
+    [string],
+    "view"
+  >;
 
   getBorrowerLoans: TypedContractMethod<
     [borrowerDID: BytesLike],
@@ -734,12 +811,18 @@ export interface LendingPool extends BaseContract {
     nameOrSignature: "baseToken"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
+    nameOrSignature: "borrowerAddresses"
+  ): TypedContractMethod<[arg0: BytesLike], [string], "view">;
+  getFunction(
     nameOrSignature: "borrowerLoans"
   ): TypedContractMethod<
     [arg0: BytesLike, arg1: BigNumberish],
     [bigint],
     "view"
   >;
+  getFunction(
+    nameOrSignature: "claimPrincipal"
+  ): TypedContractMethod<[loanId: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "collateralManager"
   ): TypedContractMethod<[], [string], "view">;
@@ -748,6 +831,7 @@ export interface LendingPool extends BaseContract {
   ): TypedContractMethod<
     [
       borrowerDID: BytesLike,
+      borrowerAddress: AddressLike,
       principalAmount: BigNumberish,
       interestRateBps: BigNumberish,
       duration: BigNumberish,
@@ -761,6 +845,7 @@ export interface LendingPool extends BaseContract {
   ): TypedContractMethod<
     [
       borrowerDID: BytesLike,
+      borrowerAddress: AddressLike,
       principalAmount: BigNumberish,
       interestRateBps: BigNumberish,
       duration: BigNumberish,
@@ -780,6 +865,9 @@ export interface LendingPool extends BaseContract {
   getFunction(
     nameOrSignature: "getBaseTokenBalance"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getBorrowerAddress"
+  ): TypedContractMethod<[borrowerDID: BytesLike], [string], "view">;
   getFunction(
     nameOrSignature: "getBorrowerLoans"
   ): TypedContractMethod<[borrowerDID: BytesLike], [bigint[]], "view">;
@@ -917,6 +1005,13 @@ export interface LendingPool extends BaseContract {
     PoolPausedEvent.OutputObject
   >;
   getEvent(
+    key: "PrincipalClaimed"
+  ): TypedContractEvent<
+    PrincipalClaimedEvent.InputTuple,
+    PrincipalClaimedEvent.OutputTuple,
+    PrincipalClaimedEvent.OutputObject
+  >;
+  getEvent(
     key: "ProtocolFeeCollected"
   ): TypedContractEvent<
     ProtocolFeeCollectedEvent.InputTuple,
@@ -989,6 +1084,17 @@ export interface LendingPool extends BaseContract {
       PoolPausedEvent.InputTuple,
       PoolPausedEvent.OutputTuple,
       PoolPausedEvent.OutputObject
+    >;
+
+    "PrincipalClaimed(uint256,bytes32,address,uint256)": TypedContractEvent<
+      PrincipalClaimedEvent.InputTuple,
+      PrincipalClaimedEvent.OutputTuple,
+      PrincipalClaimedEvent.OutputObject
+    >;
+    PrincipalClaimed: TypedContractEvent<
+      PrincipalClaimedEvent.InputTuple,
+      PrincipalClaimedEvent.OutputTuple,
+      PrincipalClaimedEvent.OutputObject
     >;
 
     "ProtocolFeeCollected(uint256,uint256)": TypedContractEvent<

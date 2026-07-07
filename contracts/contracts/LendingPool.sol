@@ -65,6 +65,7 @@ contract LendingPool is Ownable, ReentrancyGuard {
     mapping(uint256 => Loan) public loans;
     mapping(bytes32 => uint256[]) public borrowerLoans; // DID -> loan IDs
     mapping(address => uint256[]) public lenderLoans;   // Lender -> loan IDs
+    mapping(bytes32 => address) public borrowerAddresses; // DID -> wallet address
 
     bool public paused;
 
@@ -140,6 +141,7 @@ contract LendingPool is Ownable, ReentrancyGuard {
     /**
      * @dev Create a new loan with ACS-gated collateral requirements
      * @param borrowerDID Borrower's DID as bytes32
+     * @param borrowerAddress Borrower's wallet address (receives principal)
      * @param principalAmount Principal amount in base token
      * @param interestRateBps Interest rate in basis points per year
      * @param duration Loan duration in seconds
@@ -147,6 +149,7 @@ contract LendingPool is Ownable, ReentrancyGuard {
      */
     function createLoan(
         bytes32 borrowerDID,
+        address borrowerAddress,
         uint256 principalAmount,
         uint256 interestRateBps,
         uint256 duration,
@@ -156,6 +159,7 @@ contract LendingPool is Ownable, ReentrancyGuard {
         require(principalAmount > 0, "Principal must be > 0");
         require(interestRateBps >= MIN_INTEREST_RATE_BPS && interestRateBps <= MAX_INTEREST_RATE_BPS, "Invalid interest rate");
         require(duration >= MIN_LOAN_DURATION && duration <= MAX_LOAN_DURATION, "Invalid duration");
+        require(borrowerAddress != address(0), "Invalid borrower address");
 
         // Verify borrower has valid ACS score
         (uint256 score, uint256 timestamp, uint256 expiry) = acsOracle.getScore(borrowerDID);
@@ -168,10 +172,11 @@ contract LendingPool is Ownable, ReentrancyGuard {
         // Deposit collateral from borrower
         collateralManager.depositCollateral(borrowerDID, collateralToken, requiredCollateral);
 
-        // Transfer principal from pool/lender to borrower
-        // In this implementation, the contract acts as the liquidity provider
-        // The caller (lender) must have approved the contract to spend their tokens
-        baseToken.safeTransferFrom(msg.sender, address(this), principalAmount);
+        // Transfer principal from lender DIRECTLY to borrower
+        baseToken.safeTransferFrom(msg.sender, borrowerAddress, principalAmount);
+
+        // Store DID -> address mapping for future claims
+        borrowerAddresses[borrowerDID] = borrowerAddress;
 
         // Create loan record
         loanId = ++loanCounter;
@@ -213,6 +218,7 @@ contract LendingPool is Ownable, ReentrancyGuard {
     /**
      * @dev Create a loan where borrower provides collateral directly
      * @param borrowerDID Borrower's DID as bytes32
+     * @param borrowerAddress Borrower's wallet address (receives principal)
      * @param principalAmount Principal amount in base token
      * @param interestRateBps Interest rate in basis points per year
      * @param duration Loan duration in seconds
@@ -221,6 +227,7 @@ contract LendingPool is Ownable, ReentrancyGuard {
      */
     function createLoanWithCollateral(
         bytes32 borrowerDID,
+        address borrowerAddress,
         uint256 principalAmount,
         uint256 interestRateBps,
         uint256 duration,
@@ -232,6 +239,7 @@ contract LendingPool is Ownable, ReentrancyGuard {
         require(interestRateBps >= MIN_INTEREST_RATE_BPS && interestRateBps <= MAX_INTEREST_RATE_BPS, "Invalid interest rate");
         require(duration >= MIN_LOAN_DURATION && duration <= MAX_LOAN_DURATION, "Invalid duration");
         require(collateralAmount > 0, "Collateral must be > 0");
+        require(borrowerAddress != address(0), "Invalid borrower address");
 
         // Verify borrower has valid ACS score
         (uint256 score, , uint256 expiry) = acsOracle.getScore(borrowerDID);
@@ -245,8 +253,11 @@ contract LendingPool is Ownable, ReentrancyGuard {
         // Deposit collateral from borrower
         collateralManager.depositCollateral(borrowerDID, collateralToken, collateralAmount);
 
-        // Transfer principal from lender to borrower
-        baseToken.safeTransferFrom(msg.sender, address(this), principalAmount);
+        // Transfer principal from lender DIRECTLY to borrower
+        baseToken.safeTransferFrom(msg.sender, borrowerAddress, principalAmount);
+
+        // Store DID -> address mapping for future claims
+        borrowerAddresses[borrowerDID] = borrowerAddress;
 
         // Create loan record
         loanId = ++loanCounter;
@@ -283,6 +294,41 @@ contract LendingPool is Ownable, ReentrancyGuard {
             collateralToken,
             collateralAmount
         );
+    }
+
+    /// @dev Event emitted when borrower claims principal
+    event PrincipalClaimed(uint256 indexed loanId, bytes32 indexed borrowerDID, address indexed borrower, uint256 amount);
+
+    /**
+     * @dev Allow borrower to claim principal if it was sent to contract (legacy loans)
+     * @param loanId Loan ID to claim principal for
+     */
+    function claimPrincipal(uint256 loanId) external nonReentrant {
+        Loan storage loan = loans[loanId];
+        require(loan.id != 0, "Loan not found");
+
+        // Get borrower address from mapping
+        address borrower = borrowerAddresses[loan.borrowerDID];
+        require(borrower != address(0), "Borrower address not set");
+        require(msg.sender == borrower, "Only borrower can claim");
+
+        // Check if contract holds principal for this loan
+        uint256 contractBalance = baseToken.balanceOf(address(this));
+        require(contractBalance >= loan.principalAmount, "No principal to claim");
+
+        // Transfer principal to borrower
+        baseToken.safeTransfer(borrower, loan.principalAmount);
+
+        emit PrincipalClaimed(loanId, loan.borrowerDID, borrower, loan.principalAmount);
+    }
+
+    /**
+     * @dev Get borrower wallet address for a DID
+     * @param borrowerDID Borrower's DID
+     * @return Borrower's wallet address
+     */
+    function getBorrowerAddress(bytes32 borrowerDID) external view returns (address) {
+        return borrowerAddresses[borrowerDID];
     }
 
     /**

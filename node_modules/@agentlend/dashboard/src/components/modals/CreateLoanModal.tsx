@@ -11,12 +11,22 @@ const LENDING_POOL_ABI = [
   'event LoanCreated(uint256 indexed loanId, bytes32 indexed borrowerDID, address indexed lender, uint256 principalAmount, uint256 interestRateBps, uint256 duration, address collateralToken)',
 ];
 
+// ERC20 ABI for approval
+const ERC20_ABI = [
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function allowance(address owner, address spender) view returns (uint256)',
+];
+
 // Common collateral tokens on Sepolia
 const COLLATERAL_TOKENS = [
-  { symbol: 'WETH', address: '0x7b79995e5f793A07Bc00c21412e50EcA099E0e5E', decimals: 18 },
-  { symbol: 'USDC', address: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238', decimals: 6 },
-  { symbol: 'DAI', address: '0xFF34B3d4Aee8ddCd6F9AFFFB6Fe49bD371b8a357', decimals: 18 },
+  { symbol: 'WETH', address: '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9', decimals: 18 },
+  { symbol: 'USDC', address: '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853', decimals: 6 },
+  { symbol: 'DAI', address: '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9', decimals: 18 }, // Reuse MockWETH as DAI placeholder
 ];
+
+// Base token (USDC) - 6 decimals
+const BASE_TOKEN_ADDRESS = '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853';
+const BASE_TOKEN_DECIMALS = 6;
 
 interface LoanFormData {
   borrowerDID: string;
@@ -109,15 +119,27 @@ export function CreateLoanModal({ isOpen, onClose, onSuccess }: CreateLoanModalP
       }
 
       const contract = new ethers.Contract(lendingPoolAddress, LENDING_POOL_ABI, signer);
+      const baseTokenContract = new ethers.Contract(BASE_TOKEN_ADDRESS, ERC20_ABI, signer);
 
       // Convert values
       const didBytes32 = ethers.keccak256(ethers.toUtf8Bytes(formData.borrowerDID));
-      const principalAmount = ethers.parseEther(formData.principalAmount); // Assuming ETH denomination
+      // Use parseUnits with 6 decimals for USDC (base token)
+      const principalAmount = ethers.parseUnits(formData.principalAmount, BASE_TOKEN_DECIMALS);
       const interestRateBps = BigInt(Math.round(parseFloat(formData.interestRate) * 100)); // Convert % to basis points
       const duration = BigInt(parseInt(formData.durationDays) * 24 * 60 * 60); // Convert days to seconds
       const collateralToken = formData.collateralToken;
 
-      // Send transaction
+      // Step 1: Approve LendingPool to spend USDC (base token)
+      console.log('Approving LendingPool to spend USDC...');
+      const currentAllowance = await baseTokenContract.allowance(address, lendingPoolAddress);
+      if (currentAllowance < principalAmount) {
+        const approveTx = await baseTokenContract.approve(lendingPoolAddress, principalAmount);
+        setTxHash(approveTx.hash);
+        await approveTx.wait();
+        console.log('Approval confirmed');
+      }
+
+      // Step 2: Create loan
       const tx = await contract.createLoan(
         didBytes32,
         principalAmount,
@@ -211,7 +233,7 @@ export function CreateLoanModal({ isOpen, onClose, onSuccess }: CreateLoanModalP
 
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1">
-              Principal Amount (ETH)
+              Principal Amount (USDC)
             </label>
             <input
               type="number"
@@ -219,7 +241,7 @@ export function CreateLoanModal({ isOpen, onClose, onSuccess }: CreateLoanModalP
               min="0.01"
               value={formData.principalAmount}
               onChange={(e) => handleChange('principalAmount', e.target.value)}
-              placeholder="1.5"
+              placeholder="1500"
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               disabled={isSubmitting}
             />

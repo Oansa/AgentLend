@@ -6,6 +6,7 @@ import { Loans } from './pages/Loans';
 import { Agents } from './pages/Agents';
 import { Settings } from './pages/Settings';
 import { useStore } from './store/useStore';
+import { Toaster } from 'sonner';
 
 function Layout() {
   const { isSidebarOpen, toggleSidebar } = useStore();
@@ -26,6 +27,13 @@ function Layout() {
           </Routes>
         </main>
       </div>
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          className: 'bg-card border-border text-card-foreground',
+          duration: 4000,
+        }}
+      />
     </div>
   );
 }

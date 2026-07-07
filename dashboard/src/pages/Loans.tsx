@@ -2,22 +2,31 @@ import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { cn, formatCurrency, getScoreColor, getScoreLabel } from '../lib/utils';
-import { Search, Filter, ChevronDown, ChevronUp, FileText, Download, RefreshCw } from 'lucide-react';
+import { Search, ChevronDown, FileText, RefreshCw, Eye, TrendingUp, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import { CreateLoanModal } from '../components/modals/CreateLoanModal';
+import { useLoans } from '../hooks/useLoans';
+import { toast } from 'sonner';
 
-const mockLoans = [
-  { id: 'LN-001', borrower: 'did:croo:agent001', lender: '0x1234...5678', principal: 50000, interestRate: 12.5, startDate: '2026-01-15', maturity: '2026-04-15', collateralToken: 'WETH', collateralAmount: 2.5, status: 'Active', score: 780, outstanding: 51250 },
-  { id: 'LN-002', borrower: 'did:croo:agent002', lender: '0xabcd...ef12', principal: 25000, interestRate: 15.0, startDate: '2026-02-01', maturity: '2026-05-01', collateralToken: 'cbETH', collateralAmount: 1.8, status: 'Active', score: 650, outstanding: 25625 },
-  { id: 'LN-003', borrower: 'did:croo:agent003', lender: '0x5678...9012', principal: 100000, interestRate: 10.0, startDate: '2025-12-01', maturity: '2026-03-01', collateralToken: 'WETH', collateralAmount: 5.0, status: 'Repaid', score: 890, outstanding: 0 },
-  { id: 'LN-004', borrower: 'did:croo:agent004', lender: '0x9012...3456', principal: 75000, interestRate: 18.5, startDate: '2026-01-20', maturity: '2026-04-20', collateralToken: 'USDC', collateralAmount: 75000, status: 'Liquidated', score: 420, outstanding: 0 },
-  { id: 'LN-005', borrower: 'did:croo:agent005', lender: '0x3456...7890', principal: 30000, interestRate: 14.0, startDate: '2026-02-10', maturity: '2026-05-10', collateralToken: 'WETH', collateralAmount: 1.2, status: 'Active', score: 720, outstanding: 30700 },
-  { id: 'LN-006', borrower: 'did:croo:agent006', lender: '0x7890...1234', principal: 200000, interestRate: 11.0, startDate: '2026-01-01', maturity: '2026-07-01', collateralToken: 'WETH', collateralAmount: 10.0, status: 'Active', score: 810, outstanding: 204500 },
-  { id: 'LN-007', borrower: 'did:croo:agent007', lender: '0x2345...6789', principal: 15000, interestRate: 16.5, startDate: '2026-02-15', maturity: '2026-05-15', collateralToken: 'cbETH', collateralAmount: 1.0, status: 'Defaulted', score: 380, outstanding: 15450 },
-  { id: 'LN-008', borrower: 'did:croo:agent008', lender: '0x6789...0123', principal: 80000, interestRate: 13.0, startDate: '2026-01-25', maturity: '2026-04-25', collateralToken: 'WETH', collateralAmount: 4.0, status: 'Active', score: 760, outstanding: 81800 },
-];
+const statusColors: Record<string, string> = {
+  Active: 'bg-success/10 text-success border-success/20',
+  Repaid: 'bg-brand/10 text-brand border-brand/20',
+  Liquidated: 'bg-destructive/10 text-destructive border-destructive/20',
+  Defaulted: 'bg-destructive/10 text-destructive border-destructive/20',
+  Pending: 'bg-warning/10 text-warning border-warning/20',
+};
+
+const statusIcons: Record<string, React.ReactNode> = {
+  Active: <TrendingUp className="h-3 w-3" />,
+  Repaid: <FileText className="h-3 w-3" />,
+  Liquidated: <AlertTriangle className="h-3 w-3" />,
+  Defaulted: <AlertTriangle className="h-3 w-3" />,
+  Pending: <TrendingUp className="h-3 w-3 animate-pulse" />,
+};
 
 export function Loans() {
+  const { loans, isLoading, error, refetch } = useLoans();
+
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'startDate', direction: 'desc' });
@@ -25,16 +34,10 @@ export function Loans() {
 
   const statuses = ['all', 'Active', 'Repaid', 'Liquidated', 'Defaulted'];
 
-  const handleLoanCreated = (loanId: string) => {
-    console.log('Loan created:', loanId);
-    // Optionally refresh the loans list here
-    setShowCreateLoanModal(false);
-  };
-
-  const filteredLoans = mockLoans
+  const filteredLoans = loans
     .filter((loan) => {
       const matchesSearch = loan.id.toLowerCase().includes(search.toLowerCase()) ||
-        loan.borrower.toLowerCase().includes(search.toLowerCase()) ||
+        loan.borrowerDID.toLowerCase().includes(search.toLowerCase()) ||
         loan.lender.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === 'all' || loan.status === statusFilter;
       return matchesSearch && matchesStatus;
@@ -54,146 +57,288 @@ export function Loans() {
     }));
   };
 
-  const getSortIcon = (key: string) => {
-    if (sortConfig.key !== key) return <ChevronDown className="h-4 w-4 text-muted-foreground" />;
-    return sortConfig.direction === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
+  const handleLoanCreated = (loanId: string) => {
+    toast.success(`Loan ${loanId} created successfully!`);
+    setShowCreateLoanModal(false);
+    refetch();
+  };
+
+  const handleViewTransaction = (_loan: typeof loans[0]) => {
+    // In production, link to block explorer with transaction hash
+    toast.info('Transaction details would open in block explorer');
+  };
+
+  const handleRefresh = () => {
+    refetch();
+    toast.success('Loan data refreshed');
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Loans</h1>
-          <p className="text-muted-foreground">Monitor and manage all protocol loans</p>
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-brand-600 bg-clip-text text-transparent">
+            Loans
+          </h1>
+          <p className="text-muted-foreground mt-1">Monitor and manage protocol loans</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading} className="gap-2">
+            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            Refresh
           </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" /> Export
-          </Button>
-          <Button size="sm" onClick={() => setShowCreateLoanModal(true)}>
-            <FileText className="h-4 w-4 mr-2" /> New Loan
+          <Button onClick={() => setShowCreateLoanModal(true)} className="gap-2">
+            <FileText className="h-4 w-4" />
+            Create Loan
           </Button>
         </div>
       </div>
 
+      {/* Error Display */}
+      {error && (
+        <Card className="border-destructive/20">
+          <CardContent className="p-4 flex items-center gap-3 text-destructive">
+            <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+            <span>{error}</span>
+            <Button variant="ghost" size="sm" onClick={handleRefresh} className="ml-auto">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Search & Filters */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1 max-w-md">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search loans..."
+                placeholder="Search loans by ID, borrower, lender..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">Filter:</span>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
               >
                 {statuses.map((status) => (
-                  <option key={status} value={status}>{status === 'all' ? 'All Statuses' : status}</option>
+                  <option key={status} value={status}>
+                    {status === 'all' ? 'All Statuses' : status}
+                  </option>
                 ))}
               </select>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full" role="table">
-              <thead>
-                <tr className="border-b">
-                  {[
-                    { key: 'id', label: 'Loan ID' },
-                    { key: 'borrower', label: 'Borrower' },
-                    { key: 'lender', label: 'Lender' },
-                    { key: 'principal', label: 'Principal' },
-                    { key: 'interestRate', label: 'Rate' },
-                    { key: 'outstanding', label: 'Outstanding' },
-                    { key: 'collateralToken', label: 'Collateral' },
-                    { key: 'score', label: 'ACS Score' },
-                    { key: 'status', label: 'Status' },
-                    { key: 'maturity', label: 'Maturity' },
-                  ].map((col) => (
-                    <th
-                      key={col.key}
-                      scope="col"
-                      className="text-left p-4 font-medium text-muted-foreground cursor-pointer hover:text-foreground select-none"
-                      onClick={() => handleSort(col.key)}
-                    >
-                      <div className="flex items-center gap-1">
-                        {col.label}
-                        {getSortIcon(col.key)}
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLoans.map((loan) => (
-                  <tr key={loan.id} className="border-b hover:bg-accent/50 transition-colors">
-                    <td className="p-4 font-mono text-sm">{loan.id}</td>
-                    <td className="p-4">
-                      <span className="font-mono text-sm truncate block max-w-[150px]">{loan.borrower}</span>
-                    </td>
-                    <td className="p-4">
-                      <span className="font-mono text-sm">{loan.lender}</span>
-                    </td>
-                    <td className="p-4 font-medium">{formatCurrency(loan.principal)}</td>
-                    <td className="p-4 text-sm">{loan.interestRate}%</td>
-                    <td className="p-4 font-medium">{formatCurrency(loan.outstanding)}</td>
-                    <td className="p-4">
-                      <span className="font-mono text-sm">{loan.collateralToken} ({loan.collateralAmount})</span>
-                    </td>
-                    <td className="p-4">
-                      <span className={cn('px-2 py-0.5 rounded text-xs font-medium', getScoreColor(loan.score))}>
-                        {loan.score} {getScoreLabel(loan.score)}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <Badge
-                        variant={
-                          loan.status === 'Active' ? 'success' :
-                          loan.status === 'Repaid' ? 'default' :
-                          loan.status === 'Liquidated' ? 'destructive' : 'warning'
-                        }
-                      >
-                        {loan.status}
-                      </Badge>
-                    </td>
-                    <td className="p-4 text-sm text-muted-foreground">{loan.maturity}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredLoans.length === 0 && (
-            <div className="text-center py-12">
-              <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">No loans found matching your criteria</p>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between mt-6 pt-4 border-t">
-            <p className="text-sm text-muted-foreground">
-              Showing {filteredLoans.length} of {mockLoans.length} loans
-            </p>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled>Previous</Button>
-              <Button variant="outline" size="sm" disabled>Next</Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Loans Table */}
+      <Card>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <RefreshCw className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+              <p className="text-muted-foreground">Loading loans from blockchain...</p>
+            </div>
+          ) : filteredLoans.length === 0 ? (
+            <div className="p-8 text-center">
+              <FileText className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+              <h3 className="text-lg font-medium">No loans found</h3>
+              <p className="text-muted-foreground mt-1">
+                {search || statusFilter !== 'all' ? 'Try adjusting your filters' : 'Create your first loan to get started'}
+              </p>
+              {(search || statusFilter !== 'all') && (
+                <Button variant="outline" onClick={() => { setSearch(''); setStatusFilter('all'); }} className="mt-4">
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-card-border">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Loan ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('borrowerDID')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                        Borrower <ChevronDown className="h-3 w-3 ml-1" />
+                      </Button>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('principal')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                        Principal <ChevronDown className="h-3 w-3 ml-1" />
+                      </Button>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('interestRate')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                        Rate <ChevronDown className="h-3 w-3 ml-1" />
+                      </Button>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('outstanding')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                        Outstanding <ChevronDown className="h-3 w-3 ml-1" />
+                      </Button>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('collateralToken')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                        Collateral <ChevronDown className="h-3 w-3 ml-1" />
+                      </Button>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('healthFactor')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                        Health <ChevronDown className="h-3 w-3 ml-1" />
+                      </Button>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('score')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                        ACS Score <ChevronDown className="h-3 w-3 ml-1" />
+                      </Button>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('status')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                        Status <ChevronDown className="h-3 w-3 ml-1" />
+                      </Button>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('maturity')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                        Maturity <ChevronDown className="h-3 w-3 ml-1" />
+                      </Button>
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-card-border">
+                  {filteredLoans.map((loan) => (
+                    <tr key={loan.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-4 font-mono text-sm font-medium">{loan.id}</td>
+                      <td className="px-4 py-4">
+                        <div>
+                          <p className="font-mono text-sm text-muted-foreground truncate max-w-[200px]">{loan.borrowerDID}</p>
+                          <p className="font-mono text-xs text-muted-foreground">{loan.borrower.slice(0, 10)}...</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="font-medium">{formatCurrency(loan.principal)} USDC</span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="font-medium">{loan.interestRate}%</span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="font-medium">{formatCurrency(loan.outstanding)} USDC</span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 text-xs font-medium bg-muted rounded">{loan.collateralToken}</span>
+                          <span className="text-sm text-muted-foreground">{loan.collateralAmount.toFixed(4)}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={cn(
+                                "h-full rounded-full transition-all",
+                                loan.healthFactor >= 1.5 ? "bg-success" :
+                                loan.healthFactor >= 1.2 ? "bg-warning" : "bg-destructive"
+                              )}
+                              style={{ width: `${Math.min(loan.healthFactor / 2, 1) * 100}%` }}
+                            />
+                          </div>
+                          <span className={cn(
+                            "text-sm font-mono",
+                            loan.healthFactor >= 1.5 ? "text-success" :
+                            loan.healthFactor >= 1.2 ? "text-warning" : "text-destructive"
+                          )}>
+                            {loan.healthFactor.toFixed(2)}x
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            "px-2 py-0.5 text-xs font-medium rounded",
+                            getScoreColor(loan.score)
+                          )}>
+                            {loan.score}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{getScoreLabel(loan.score)}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <Badge className={statusColors[loan.status]}>
+                          {statusIcons[loan.status]}
+                          {loan.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-muted-foreground">{loan.maturity}</td>
+                      <td className="px-4 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewTransaction(loan)}
+                            className="h-8 w-8"
+                            title="View transaction"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {loan.status === 'Active' && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              title="Liquidate (if eligible)"
+                              disabled={loan.healthFactor > 1}
+                            >
+                              <AlertTriangle className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Summary Stats */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground">Total Loans</p>
+            <p className="text-2xl font-bold">{loans.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground">Active Principal</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(loans.filter(l => l.status === 'Active').reduce((sum, l) => sum + l.principal, 0))} USDC
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground">Outstanding</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(loans.filter(l => l.status === 'Active').reduce((sum, l) => sum + l.outstanding, 0))} USDC
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Create Loan Modal */}
       <CreateLoanModal
         isOpen={showCreateLoanModal}
         onClose={() => setShowCreateLoanModal(false)}
