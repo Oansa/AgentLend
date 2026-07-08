@@ -4,77 +4,102 @@
 
 @layer base {
   :root {
-    /* AgentLend Brand Colors */
-    --brand-50: 220 100% 97%;
-    --brand-100: 220 100% 93%;
-    --brand-200: 220 90% 85%;
-    --brand-300: 220 85% 72%;
-    --brand-400: 220 80% 58%;
-    --brand-500: 220 90% 50%;
-    --brand-600: 220 95% 42%;
-    --brand-700: 220 95% 35%;
-    --brand-800: 220 90% 28%;
-    --brand-900: 220 85% 22%;
-    --brand-950500-glow: 220 90% 50% / 0.3;
+    /* Layout Background & Sidebar */
+    --bg-main: #f0f5fa;                   /* Soft pastel blue-grey canvas */
+    --sidebar-active-bg: #fcf851;         /* Bright yellow icon highlight */
 
-    /* Accent Colors */
-    --success: 142 76% 36%;
-    --success-bg: 142 76% 36% / 0.1;
-    --warning: 38 92% 50%;
-    --warning-bg: 38 92% 50% / 0.1;
-    --danger: 0 84% 60%;
-    --danger-bg: 0 84% 60% / 0.1;
+    /* Primary & Accent UI Colors */
+    --brand-primary: #1e52b3;             /* Rich navy blue used for main action buttons */
+    --brand-accent: #3a82f6;              /* Vibrant blue for links/highlights */
 
-    /* Light Theme */
-    --background: 0 0% 100%;
-    --foreground: 220 15% 8%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 15% 8%;
-    --card-border: 220 15% 90%;
-    --muted: 220 15% 96%;
-    --muted-foreground: 220 10% 45%;
-    --accent: 220 90% 97%;
-    --accent-foreground: 220 95% 35%;
-    --border: 220 15% 90%;
-    --input: 220 15% 90%;
-    --ring: 220 90% 50%;
+    /* Card Backgrounds (Theme Color Mapping) */
+    --card-bg-white: #ffffff;
+    --card-bg-red: #fff1f2;               /* Soft pink/red for Urgent Cases */
+    --card-bg-yellow: #fefec6;            /* Soft yellow for Pending Reviews */
+    --card-bg-blue: #cbdffa;              /* Muted blue for Watchlist */
+
+    /* Semantic Health/Risk Mapping */
+    --status-critical-bg: #ffe4e6;        /* Critical / Danger */
+    --status-critical-text: #b91c1c;
+
+    --status-watch-bg: #e0f2fe;           /* Warning / Safe Watch */
+    --status-watch-text: #0369a1;
+
+    --status-stable-bg: #dcfce7;          /* Safe / Repaid */
+    --status-stable-text: #15803d;
+
+    /* Typography */
+    --text-primary: #1e293b;
+    --text-muted: #64748b;
+    --border-light: #e2e8f0;
+
+    /* Legacy shadcn/ui compatibility - map to new values */
+    --background: #f0f5fa;
+    --foreground: #1e293b;
+    --card: #ffffff;
+    --card-foreground: #1e293b;
+    --card-border: #e2e8f0;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #e0f2fe;
+    --accent-foreground: #1e52b3;
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #1e52b3;
     --radius: 0.75rem;
 
     /* Sidebar */
-    --sidebar-bg: 0 0% 100%;
-    --sidebar-border: 220 15% 90%;
-    --sidebar-item-hover: 220 90% 97%;
-    --sidebar-item-active: 220 90% 94%;
-    --sidebar-text: 220 15% 35%;
-    --sidebar-text-muted: 220 10% 55%;
-    --sidebar-icon: 220 10% 55%;
-    --sidebar-icon-active: 220 90% 50%;
+    --sidebar-bg: #ffffff;
+    --sidebar-border: #e2e8f0;
+    --sidebar-item-hover: #f1f5f9;
+    --sidebar-item-active: #fcf851;
+    --sidebar-text: #334155;
+    --sidebar-text-muted: #64748b;
+    --sidebar-icon: #64748b;
+    --sidebar-icon-active: #1e52b3;
   }
 
   .dark {
-    /* Dark Theme - AgentLend Pro Style */
-    --background: 225 20% 5%;
-    --foreground: 220 10% 95%;
-    --card: 225 20% 7%;
-    --card-foreground: 220 10% 95%;
-    --card-border: 220 15% 18%;
-    --muted: 220 15% 12%;
-    --muted-foreground: 220 10% 55%;
-    --accent: 220 90% 15%;
-    --accent-foreground: 220 90% 60%;
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 220 90% 55%;
+    /* Dark Theme - Keep existing but with new brand colors */
+    --bg-main: #0f172a;
+    --sidebar-active-bg: #fef08a;
+    --brand-primary: #3b82f6;
+    --brand-accent: #60a5fa;
+    --card-bg-white: #1e293b;
+    --card-bg-red: #450a0a;
+    --card-bg-yellow: #422006;
+    --card-bg-blue: #1e3a5f;
+    --status-critical-bg: #450a0a;
+    --status-critical-text: #fca5a5;
+    --status-watch-bg: #1e3a5f;
+    --status-watch-text: #93c5fd;
+    --status-stable-bg: #14532d;
+    --status-stable-text: #86efac;
+    --text-primary: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-light: #334155;
 
-    /* Sidebar Dark */
-    --sidebar-bg: 225 20% 6%;
-    --sidebar-border: 220 15% 15%;
-    --sidebar-item-hover: 220 90% 12%;
-    --sidebar-item-active: 220 90% 18%;
-    --sidebar-text: 220 10% 85%;
-    --sidebar-text-muted: 220 10% 55%;
-    --sidebar-icon: 220 10% 55%;
-    --sidebar-icon-active: 220 90% 60%;
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+    --card: #1e293b;
+    --card-foreground: #f1f5f9;
+    --card-border: #334155;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+    --accent: #1e3a5f;
+    --accent-foreground: #93c5fd;
+    --border: #334155;
+    --input: #334155;
+    --ring: #3b82f6;
+
+    --sidebar-bg: #0f172a;
+    --sidebar-border: #334155;
+    --sidebar-item-hover: #1e293b;
+    --sidebar-item-active: #fef08a;
+    --sidebar-text: #e2e8f0;
+    --sidebar-text-muted: #94a3b8;
+    --sidebar-icon: #94a3b8;
+    --sidebar-icon-active: #3b82f6;
   }
 }
 
@@ -84,8 +109,8 @@
   }
 
   body {
-    background: hsl(var(--background));
-    color: hsl(var(--foreground));
+    background: var(--bg-main);
+    color: var(--text-primary);
     font-feature-settings: "rlig" 1, "calt" 1;
     font-family: 'Inter', system-ui, sans-serif;
   }
@@ -99,44 +124,66 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
+    background: var(--text-muted);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
+    background: var(--text-muted);
   }
 }
 
 @layer utilities {
-  /* Gradient utilities */
-  .gradient-brand {
-    background: linear-gradient(135deg, hsl(var(--brand-500)) 0%, hsl(var(--brand-700)) 100%);
-  }
-  .gradient-brand-subtle {
-    background: linear-gradient(135deg, hsl(var(--brand-500) / 0.1) 0%, hsl(var(--brand-700) / 0.05) 100%);
-  }
-  .gradient-card {
-    background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
-  }
-  .gradient-glow {
-    box-shadow: 0 0 40px hsl(var(--brand-500-glow));
-  }
-
-  /* Glass effect */
+  /* Glassmorphism effects */
   .glass {
-    background: hsl(var(--card) / 0.8);
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--card-border) / 0.5);
+    border: 1px solid var(--border-light);
+  }
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-light);
   }
   .glass-dark {
-    background: hsl(var(--card) / 0.6);
+    background: rgba(15, 23, 42, 0.7);
     backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--card-border) / 0.3);
+    border: 1px solid var(--border-light);
+  }
+
+  /* Card background utilities */
+  .card-bg-white { background: var(--card-bg-white); }
+  .card-bg-red { background: var(--card-bg-red); }
+  .card-bg-yellow { background: var(--card-bg-yellow); }
+  .card-bg-blue { background: var(--card-bg-blue); }
+
+  /* Status badge utilities */
+  .status-critical {
+    background: var(--status-critical-bg);
+    color: var(--status-critical-text);
+  }
+  .status-watch {
+    background: var(--status-watch-bg);
+    color: var(--status-watch-text);
+  }
+  .status-stable {
+    background: var(--status-stable-bg);
+    color: var(--status-stable-text);
+  }
+
+  /* Gradient utilities */
+  .gradient-brand {
+    background: linear-gradient(135deg, var(--brand-primary) 0%, #3a82f6 100%);
+  }
+  .gradient-brand-subtle {
+    background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
+  }
+  .gradient-blue-purple {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
   }
 
   /* Text gradients */
   .text-gradient-brand {
-    background: linear-gradient(135deg, hsl(var(--brand-500)), hsl(var(--brand-400)));
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -152,8 +199,8 @@
     to { opacity: 1; transform: translateX(0); }
   }
   @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px hsl(var(--brand-500-glow)); }
-    50% { box-shadow: 0 0 40px hsl(var(--brand-500-glow)); }
+    0%, 100% { box-shadow: 0 0 20px rgba(30, 82, 179, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(30, 82, 179, 0.5); }
   }
 
   .animate-fade-in {

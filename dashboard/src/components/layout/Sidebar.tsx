@@ -1,71 +1,34 @@
 import { NavLink } from 'react-router-dom';
-import { Menu, X, LayoutDashboard, FileText, Users, BarChart3, Settings, Globe, Shield } from 'lucide-react';
-import { useStore } from '../../store/useStore';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Loans', href: '/loans', icon: FileText },
-  { name: 'Agents', href: '/agents', icon: Users },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Dashboard', href: '/dashboard', icon: '🏠' },
+  { name: 'Loans', href: '/loans', icon: '📋' },
+  { name: 'Agents', href: '/agents', icon: '👥' },
+  { name: 'Analytics', href: '/analytics', icon: '📊' },
 ];
 
 export function Sidebar() {
-  const { isSidebarOpen, toggleSidebar } = useStore();
-
   return (
-    <aside
-      className={`fixed inset-y-0 left-0 z-50 transition-all duration-300 bg-card border-r ${
-        isSidebarOpen ? 'w-64' : 'w-20'
-      } lg:relative lg:translate-x-0`}
-    >
-      <div className="flex h-16 items-center justify-between px-4 border-b">
-        <div className="flex items-center gap-2">
-          <Shield className="h-8 w-8 text-primary" />
-          <span className={`font-bold text-xl transition-opacity ${isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
-            AgentLend
-          </span>
-        </div>
-        <button
-          onClick={toggleSidebar}
-          className="lg:hidden p-2 rounded-md hover:bg-accent"
-          aria-label="Toggle sidebar"
-        >
-          {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
-      </div>
-
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto" aria-label="Main navigation">
-        {navigation.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.name}
-              to={item.href}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                }`
-              }
-              title={isSidebarOpen ? undefined : item.name}
-            >
-              <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-              {isSidebarOpen && <span className="font-medium whitespace-nowrap">{item.name}</span>}
-            </NavLink>
-          );
-        })}
+    <aside className="w-20 bg-white border-r border-[#e2e8f0] flex flex-col items-center py-6 shrink-0">
+      <div className="w-10 h-10 bg-[#1e52b3] rounded-xl flex items-center justify-center text-white font-bold text-lg mb-8">L</div>
+      <nav className="flex-1 flex flex-col space-y-4 w-full">
+        {navigation.map((item) => (
+          <NavLink
+            key={item.name}
+            to={item.href}
+            className={({ isActive }) =>
+              `flex items-center justify-center p-3 rounded-xl transition-colors ${
+                isActive
+                  ? 'bg-[#fcf851] text-black'
+                  : 'text-gray-400 hover:bg-gray-100 hover:text-[#1e52b3]'
+              }`
+            }
+            title={item.name}
+          >
+            <span className="text-xl">{item.icon}</span>
+          </NavLink>
+        ))}
       </nav>
-
-      <div className="p-4 border-t">
-        <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted">
-          <Globe className="h-5 w-5 text-muted-foreground" />
-          <span className={`font-medium transition-opacity ${isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
-            Testnet
-          </span>
-        </div>
-      </div>
     </aside>
   );
 }

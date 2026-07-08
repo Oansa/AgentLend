@@ -2,27 +2,11 @@ import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { cn, formatCurrency, getScoreColor, getScoreLabel } from '../lib/utils';
-import { Search, ChevronDown, FileText, RefreshCw, Eye, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Search, ChevronDown, FileText, RefreshCw, Eye, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import { CreateLoanModal } from '../components/modals/CreateLoanModal';
 import { useLoans } from '../hooks/useLoans';
 import { toast } from 'sonner';
-
-const statusColors: Record<string, string> = {
-  Active: 'bg-success/10 text-success border-success/20',
-  Repaid: 'bg-brand/10 text-brand border-brand/20',
-  Liquidated: 'bg-destructive/10 text-destructive border-destructive/20',
-  Defaulted: 'bg-destructive/10 text-destructive border-destructive/20',
-  Pending: 'bg-warning/10 text-warning border-warning/20',
-};
-
-const statusIcons: Record<string, React.ReactNode> = {
-  Active: <TrendingUp className="h-3 w-3" />,
-  Repaid: <FileText className="h-3 w-3" />,
-  Liquidated: <AlertTriangle className="h-3 w-3" />,
-  Defaulted: <AlertTriangle className="h-3 w-3" />,
-  Pending: <TrendingUp className="h-3 w-3 animate-pulse" />,
-};
 
 export function Loans() {
   const { loans, isLoading, error, refetch } = useLoans();
@@ -64,7 +48,6 @@ export function Loans() {
   };
 
   const handleViewTransaction = (_loan: typeof loans[0]) => {
-    // In production, link to block explorer with transaction hash
     toast.info('Transaction details would open in block explorer');
   };
 
@@ -73,22 +56,38 @@ export function Loans() {
     toast.success('Loan data refreshed');
   };
 
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, { bg: string; text: string }> = {
+      Active: { bg: '#dcfce7', text: '#15803d' },
+      Repaid: { bg: '#dbeafe', text: '#1e52b3' },
+      Liquidated: { bg: '#ffe4e6', text: '#b91c1c' },
+      Defaulted: { bg: '#ffe4e6', text: '#b91c1c' },
+      Pending: { bg: '#fefec6', text: '#854d0e' },
+    };
+    return variants[status] || variants.Active;
+  };
+
+  const getHealthBadge = (healthFactor: number) => {
+    if (healthFactor < 1.2) return { bg: '#ffe4e6', text: '#b91c1c', label: 'Critical' };
+    if (healthFactor < 1.5) return { bg: '#e0f2fe', text: '#0369a1', label: 'Watch' };
+    return { bg: '#dcfce7', text: '#15803d', label: 'Stable' };
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="min-h-screen bg-[#f0f5fa] text-[#1e293b] font-sans space-y-6 p-8 max-w-[1600px] mx-auto">
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-brand-600 bg-clip-text text-transparent">
-            Loans
-          </h1>
-          <p className="text-muted-foreground mt-1">Monitor and manage protocol loans</p>
+          <h1 className="text-3xl font-bold tracking-tight text-[#1e293b]">Loans</h1>
+          <p className="text-[#64748b] mt-1">Monitor and manage protocol loans</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={handleRefresh} disabled={isLoading} className="gap-2">
             <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             Refresh
           </Button>
-          <Button onClick={() => setShowCreateLoanModal(true)} className="gap-2">
+          <Button onClick={() => setShowCreateLoanModal(true)} className="gap-2 bg-[#1e52b3] hover:bg-[#153d8a]">
             <FileText className="h-4 w-4" />
             Create Loan
           </Button>
@@ -97,8 +96,8 @@ export function Loans() {
 
       {/* Error Display */}
       {error && (
-        <Card className="border-destructive/20">
-          <CardContent className="p-4 flex items-center gap-3 text-destructive">
+        <Card className="border-[#fecaca] bg-[#fff1f2]">
+          <CardContent className="p-4 flex items-center gap-3 text-[#b91c1c]">
             <AlertTriangle className="h-5 w-5 flex-shrink-0" />
             <span>{error}</span>
             <Button variant="ghost" size="sm" onClick={handleRefresh} className="ml-auto">
@@ -109,25 +108,25 @@ export function Loans() {
       )}
 
       {/* Search & Filters */}
-      <Card>
+      <Card className="rounded-3xl border-[#e2e8f0] shadow-sm">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748b]" />
               <input
                 type="text"
                 placeholder="Search loans by ID, borrower, lender..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 bg-white border border-[#e2e8f0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3a82f6] focus:border-transparent text-sm placeholder:text-gray-400"
               />
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">Filter:</span>
+              <span className="text-sm text-[#64748b]">Filter:</span>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                className="px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3a82f6] focus:border-transparent text-sm"
               >
                 {statuses.map((status) => (
                   <option key={status} value={status}>
@@ -141,18 +140,18 @@ export function Loans() {
       </Card>
 
       {/* Loans Table */}
-      <Card>
+      <Card className="rounded-3xl border-[#e2e8f0] shadow-sm overflow-hidden">
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-8 text-center">
-              <RefreshCw className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
-              <p className="text-muted-foreground">Loading loans from blockchain...</p>
+              <RefreshCw className="h-8 w-8 animate-spin text-[#1e52b3] mx-auto mb-2" />
+              <p className="text-[#64748b]">Loading loans from blockchain...</p>
             </div>
           ) : filteredLoans.length === 0 ? (
             <div className="p-8 text-center">
-              <FileText className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-              <h3 className="text-lg font-medium">No loans found</h3>
-              <p className="text-muted-foreground mt-1">
+              <FileText className="h-12 w-12 text-[#64748b]/50 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-[#1e293b]">No loans found</h3>
+              <p className="text-[#64748b] mt-1">
                 {search || statusFilter !== 'all' ? 'Try adjusting your filters' : 'Create your first loan to get started'}
               </p>
               {(search || statusFilter !== 'all') && (
@@ -163,148 +162,132 @@ export function Loans() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-card-border">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Loan ID</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Button variant="ghost" size="icon" onClick={() => handleSort('borrowerDID')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                  <tr className="text-[11px] uppercase tracking-wider text-[#64748b] border-b border-[#e2e8f0] bg-[#f8fafc]">
+                    <th className="px-4 py-3">Loan ID</th>
+                    <th className="px-4 py-3">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('borrowerDID')} className="h-auto p-0 text-[#64748b] hover:text-[#1e293b]">
                         Borrower <ChevronDown className="h-3 w-3 ml-1" />
                       </Button>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Button variant="ghost" size="icon" onClick={() => handleSort('principal')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                    <th className="px-4 py-3 text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('principal')} className="h-auto p-0 text-[#64748b] hover:text-[#1e293b]">
                         Principal <ChevronDown className="h-3 w-3 ml-1" />
                       </Button>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Button variant="ghost" size="icon" onClick={() => handleSort('interestRate')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                    <th className="px-4 py-3 text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('interestRate')} className="h-auto p-0 text-[#64748b] hover:text-[#1e293b]">
                         Rate <ChevronDown className="h-3 w-3 ml-1" />
                       </Button>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Button variant="ghost" size="icon" onClick={() => handleSort('outstanding')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                    <th className="px-4 py-3 text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('outstanding')} className="h-auto p-0 text-[#64748b] hover:text-[#1e293b]">
                         Outstanding <ChevronDown className="h-3 w-3 ml-1" />
                       </Button>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Button variant="ghost" size="icon" onClick={() => handleSort('collateralToken')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                    <th className="px-4 py-3 text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('collateralToken')} className="h-auto p-0 text-[#64748b] hover:text-[#1e293b]">
                         Collateral <ChevronDown className="h-3 w-3 ml-1" />
                       </Button>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Button variant="ghost" size="icon" onClick={() => handleSort('healthFactor')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                    <th className="px-4 py-3 text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('healthFactor')} className="h-auto p-0 text-[#64748b] hover:text-[#1e293b]">
                         Health <ChevronDown className="h-3 w-3 ml-1" />
                       </Button>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Button variant="ghost" size="icon" onClick={() => handleSort('score')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                    <th className="px-4 py-3 text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('score')} className="h-auto p-0 text-[#64748b] hover:text-[#1e293b]">
                         ACS Score <ChevronDown className="h-3 w-3 ml-1" />
                       </Button>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Button variant="ghost" size="icon" onClick={() => handleSort('status')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                    <th className="px-4 py-3">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('status')} className="h-auto p-0 text-[#64748b] hover:text-[#1e293b]">
                         Status <ChevronDown className="h-3 w-3 ml-1" />
                       </Button>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Button variant="ghost" size="icon" onClick={() => handleSort('maturity')} className="h-auto p-0 text-muted-foreground hover:text-foreground">
+                    <th className="px-4 py-3 text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleSort('maturity')} className="h-auto p-0 text-[#64748b] hover:text-[#1e293b]">
                         Maturity <ChevronDown className="h-3 w-3 ml-1" />
                       </Button>
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-3 w-20">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-card-border">
-                  {filteredLoans.map((loan) => (
-                    <tr key={loan.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-4 font-mono text-sm font-medium">{loan.id}</td>
-                      <td className="px-4 py-4">
-                        <div>
-                          <p className="font-mono text-sm text-muted-foreground truncate max-w-[200px]">{loan.borrowerDID}</p>
-                          <p className="font-mono text-xs text-muted-foreground">{loan.borrower.slice(0, 10)}...</p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className="font-medium">{formatCurrency(loan.principal)} USDC</span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className="font-medium">{loan.interestRate}%</span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className="font-medium">{formatCurrency(loan.outstanding)} USDC</span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 text-xs font-medium bg-muted rounded">{loan.collateralToken}</span>
-                          <span className="text-sm text-muted-foreground">{loan.collateralAmount.toFixed(4)}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className={cn(
-                                "h-full rounded-full transition-all",
-                                loan.healthFactor >= 1.5 ? "bg-success" :
-                                loan.healthFactor >= 1.2 ? "bg-warning" : "bg-destructive"
-                              )}
-                              style={{ width: `${Math.min(loan.healthFactor / 2, 1) * 100}%` }}
-                            />
+                <tbody className="divide-y divide-[#e2e8f0] text-sm">
+                  {filteredLoans.map((loan) => {
+                    const statusBadge = getStatusBadge(loan.status);
+                    const healthBadge = getHealthBadge(loan.healthFactor);
+                    const scoreColor = getScoreColor(loan.score);
+
+                    return (
+                      <tr key={loan.id} className="hover:bg-[#f8fafc] transition-colors">
+                        <td className="px-4 py-3 font-mono text-sm font-medium text-[#1e293b]">{loan.id}</td>
+                        <td className="px-4 py-3">
+                          <div>
+                            <p className="font-medium text-[#1e293b] font-mono text-sm truncate max-w-[200px]">{loan.borrowerDID}</p>
+                            <p className="font-mono text-xs text-[#64748b]">{loan.borrower.slice(0, 10)}...</p>
                           </div>
-                          <span className={cn(
-                            "text-sm font-mono",
-                            loan.healthFactor >= 1.5 ? "text-success" :
-                            loan.healthFactor >= 1.2 ? "text-warning" : "text-destructive"
-                          )}>
-                            {loan.healthFactor.toFixed(2)}x
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <span className={cn(
-                            "px-2 py-0.5 text-xs font-medium rounded",
-                            getScoreColor(loan.score)
-                          )}>
-                            {loan.score}
-                          </span>
-                          <span className="text-xs text-muted-foreground">{getScoreLabel(loan.score)}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <Badge className={statusColors[loan.status]}>
-                          {statusIcons[loan.status]}
-                          {loan.status}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-muted-foreground">{loan.maturity}</td>
-                      <td className="px-4 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleViewTransaction(loan)}
-                            className="h-8 w-8"
-                            title="View transaction"
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium text-[#1e293b]">{formatCurrency(loan.principal)} USDC</td>
+                        <td className="px-4 py-3 text-right font-medium text-[#64748b]">{loan.interestRate}%</td>
+                        <td className="px-4 py-3 text-right font-medium text-[#1e293b]">{formatCurrency(loan.outstanding)} USDC</td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <span className="px-2 py-0.5 text-xs font-medium bg-[#f1f5f9] rounded">{loan.collateralToken}</span>
+                            <span className="text-sm text-[#64748b]">{loan.collateralAmount.toFixed(4)}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex flex-col items-end space-y-1">
+                            <div className={`font-bold text-lg ${healthBadge.text}`}>
+                              HF: {loan.healthFactor.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-[#64748b] font-mono">{loan.interestRate}% APR</div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <span className={`px-2 py-0.5 text-xs font-medium rounded ${scoreColor}`}>
+                              {loan.score}
+                            </span>
+                            <span className="text-xs text-[#64748b]">{getScoreLabel(loan.score)}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge
+                            className={`px-3 py-1 text-xs font-semibold rounded-full ${statusBadge.bg} ${statusBadge.text}`}
                           >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {loan.status === 'Active' && (
+                            {loan.status}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-[#64748b]">{loan.maturity}</td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              title="Liquidate (if eligible)"
-                              disabled={loan.healthFactor > 1}
+                              onClick={() => handleViewTransaction(loan)}
+                              className="h-8 w-8 text-[#64748b] hover:text-[#1e52b3] hover:bg-[#dbeafe]"
+                              title="View transaction"
                             >
-                              <AlertTriangle className="h-4 w-4" />
+                              <Eye className="h-4 w-4" />
                             </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {loan.status === 'Active' && loan.healthFactor < 1.5 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-[#ef4444] hover:text-[#ef4444] hover:bg-[#ffe4e6]"
+                                title="Liquidate (if eligible)"
+                              >
+                                <AlertTriangle className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -314,24 +297,24 @@ export function Loans() {
 
       {/* Summary Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
+        <Card className="rounded-3xl border-[#e2e8f0] shadow-sm">
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Total Loans</p>
-            <p className="text-2xl font-bold">{loans.length}</p>
+            <p className="text-sm text-[#64748b] uppercase tracking-wider">Total Loans</p>
+            <p className="text-2xl font-bold text-[#1e293b] mt-1">{loans.length}</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-3xl border-[#e2e8f0] shadow-sm">
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Active Principal</p>
-            <p className="text-2xl font-bold">
+            <p className="text-sm text-[#64748b] uppercase tracking-wider">Active Principal</p>
+            <p className="text-2xl font-bold text-[#1e293b] mt-1">
               {formatCurrency(loans.filter(l => l.status === 'Active').reduce((sum, l) => sum + l.principal, 0))} USDC
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-3xl border-[#e2e8f0] shadow-sm">
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Outstanding</p>
-            <p className="text-2xl font-bold">
+            <p className="text-sm text-[#64748b] uppercase tracking-wider">Outstanding</p>
+            <p className="text-2xl font-bold text-[#1e293b] mt-1">
               {formatCurrency(loans.filter(l => l.status === 'Active').reduce((sum, l) => sum + l.outstanding, 0))} USDC
             </p>
           </CardContent>

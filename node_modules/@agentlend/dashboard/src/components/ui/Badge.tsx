@@ -1,7 +1,7 @@
 import { cn } from '../../lib/utils';
 
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning';
+  variant?: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'critical' | 'watch' | 'stable';
 }
 
 export function Badge({ className, variant = 'default', ...props }: BadgeProps) {
@@ -12,6 +12,9 @@ export function Badge({ className, variant = 'default', ...props }: BadgeProps) 
     outline: 'text-foreground border border-input bg-background hover:bg-accent',
     success: 'bg-green-500 text-white hover:bg-green-600',
     warning: 'bg-yellow-500 text-white hover:bg-yellow-600',
+    critical: 'status-critical',
+    watch: 'status-watch',
+    stable: 'status-stable',
   };
 
   return (
