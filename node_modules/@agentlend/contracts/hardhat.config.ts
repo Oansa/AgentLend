@@ -12,7 +12,7 @@ const config: HardhatUserConfig = {
         enabled: true,
         runs: 200,
       },
-      viaIR: false,
+      viaIR: true,
       evmVersion: "cancun",
     },
   },
@@ -23,6 +23,10 @@ const config: HardhatUserConfig = {
         enabled: !!process.env.BASE_MAINNET_RPC_URL,
       },
       chainId: 31337,
+      mining: {
+        auto: true,
+        interval: 0,
+      },
     },
     "base-sepolia": {
       url: process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org",

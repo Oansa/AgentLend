@@ -2,11 +2,15 @@ import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { cn, formatCurrency, getScoreColor, getScoreLabel } from '../lib/utils';
-import { Search, ChevronDown, FileText, RefreshCw, Eye, AlertTriangle } from 'lucide-react';
+import { Search, ChevronDown, FileText, RefreshCw, Eye, AlertTriangle, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { CreateLoanModal } from '../components/modals/CreateLoanModal';
 import { useLoans } from '../hooks/useLoans';
 import { toast } from 'sonner';
+
+// Base Sepolia block explorer
+const BASE_SEPOLIA_EXPLORER = import.meta.env.VITE_BASE_SEPOLIA_EXPLORER || 'https://sepolia.basescan.org';
+const LENDING_POOL_ADDRESS = import.meta.env.VITE_LENDING_POOL_ADDRESS || '';
 
 export function Loans() {
   const { loans, isLoading, error, refetch } = useLoans();
@@ -29,8 +33,15 @@ export function Loans() {
     .sort((a, b) => {
       const aVal = a[sortConfig.key as keyof typeof a];
       const bVal = b[sortConfig.key as keyof typeof b];
-      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+      if (aVal === undefined || bVal === undefined) return 0;
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortConfig.direction === 'asc'
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      }
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+      }
       return 0;
     });
 
@@ -47,8 +58,18 @@ export function Loans() {
     refetch();
   };
 
-  const handleViewTransaction = (_loan: typeof loans[0]) => {
-    toast.info('Transaction details would open in block explorer');
+  const handleViewTransaction = (loan: typeof loans[0]) => {
+    // Use txHash if available for direct transaction link
+    if (loan.txHash) {
+      const url = `${BASE_SEPOLIA_EXPLORER}/tx/${loan.txHash}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+      toast.success('Opened transaction in block explorer');
+    } else {
+      // Fallback: open contract page and filter by method
+      const url = `${BASE_SEPOLIA_EXPLORER}/address/${LENDING_POOL_ADDRESS}#tokentxns`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+      toast.info('Transaction hash not available - opened contract page');
+    }
   };
 
   const handleRefresh = () => {
@@ -269,9 +290,10 @@ export function Loans() {
                               size="icon"
                               onClick={() => handleViewTransaction(loan)}
                               className="h-8 w-8 text-[#64748b] hover:text-[#1e52b3] hover:bg-[#dbeafe]"
-                              title="View transaction"
+                              title="View on Base Sepolia Explorer"
                             >
                               <Eye className="h-4 w-4" />
+                              <ExternalLink className="h-3 w-3 ml-1 opacity-60" />
                             </Button>
                             {loan.status === 'Active' && loan.healthFactor < 1.5 && (
                               <Button

@@ -22,6 +22,7 @@ async function main() {
   );
 
   const lendingPoolAddress = latestDeployment.contracts.LendingPool;
+  const collateralManagerAddress = latestDeployment.contracts.CollateralManager;
   const wethAddress = latestDeployment.contracts.WETH;
   const usdcAddress = latestDeployment.contracts.USDC;
   const deployerAddress = latestDeployment.deployer;
@@ -31,7 +32,7 @@ async function main() {
   console.log(`📋 USDC: ${usdcAddress}`);
   console.log(`📋 Deployer: ${deployerAddress}\n`);
 
-  const [deployer] = await ethers.getSigners();
+  const [deployer, borrower] = await ethers.getSigners();
 
   // Connect to contracts
   const LendingPool = await ethers.getContractFactory("LendingPool");
@@ -43,8 +44,7 @@ async function main() {
 
   // Test borrower DID
   const borrowerDID = ethers.keccak256(ethers.toUtf8Bytes("did:croo:agent001"));
-  // Borrower address (Hardhat account #1 for testing)
-  const borrowerAddress = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+  const borrowerAddress = borrower.address;
 
   // Loan parameters
   const principalAmount = ethers.parseUnits("1500", 6); // 1,500 USDC
@@ -60,13 +60,21 @@ async function main() {
   console.log(`   Duration: ${duration / (24 * 60 * 60)} days`);
   console.log(`   Collateral Token: WETH (${wethAddress})\n`);
 
+  // Mint WETH to borrower
+  console.log("\n💰 Minting WETH to borrower...");
+  const mintTx = await weth.mint(borrowerAddress, ethers.parseEther("10"));
+  await mintTx.wait();
+  console.log(`   Minted 10 WETH to borrower`);
+
   // Check balances
   const deployerUsdcBal = await usdc.balanceOf(deployerAddress);
+  const borrowerWethBal = await weth.balanceOf(borrowerAddress);
   const poolUsdcBal = await usdc.balanceOf(lendingPoolAddress);
   const poolWethBal = await weth.balanceOf(lendingPoolAddress);
 
   console.log("💰 Balances before:");
   console.log(`   Deployer USDC: ${ethers.formatUnits(deployerUsdcBal, 6)}`);
+  console.log(`   Borrower WETH: ${ethers.formatEther(borrowerWethBal)}`);
   console.log(`   LendingPool USDC: ${ethers.formatUnits(poolUsdcBal, 6)}`);
   console.log(`   LendingPool WETH: ${ethers.formatEther(poolWethBal)}`);
 
@@ -78,24 +86,30 @@ async function main() {
 
   // Calculate required collateral
   const CollateralManager = await ethers.getContractFactory("CollateralManager");
-  const collateralManager = CollateralManager.attach(latestDeployment.contracts.CollateralManager);
+  const collateralManager = CollateralManager.attach(collateralManagerAddress);
   const requiredCollateral = await collateralManager.calculateRequiredCollateral(principalAmount, score);
   console.log(`🔒 Required collateral: ${ethers.formatEther(requiredCollateral)} WETH`);
 
-  // Approve LendingPool to spend USDC
-  console.log("\n✅ Approving LendingPool to spend USDC...");
-  const approveTx = await usdc.approve(lendingPoolAddress, principalAmount);
-  await approveTx.wait();
-  console.log(`   Approved! Tx: ${approveTx.hash}`);
+  // Approve LendingPool to spend USDC (from deployer)
+  console.log("\n✅ Approving LendingPool to spend USDC (from deployer)...");
+  const approveUsdcTx = await usdc.approve(lendingPoolAddress, principalAmount);
+  await approveUsdcTx.wait();
+  console.log(`   Approved USDC! Tx: ${approveUsdcTx.hash}`);
 
-  // Create loan
+  // Approve LendingPool to spend WETH (from borrower) - LendingPool calls depositCollateral which pulls from msg.sender (LendingPool)
+  console.log("\n✅ Approving LendingPool to spend WETH (from borrower)...");
+  const approveWethTx = await weth.connect(borrower).approve(lendingPoolAddress, requiredCollateral);
+  await approveWethTx.wait();
+  console.log(`   Approved WETH! Tx: ${approveWethTx.hash}`);
+
+  // Create loan (called by deployer, but borrower is the borrowerAddress)
   console.log("\n🚀 Creating loan...");
   const tx = await lendingPool.createLoan(
     borrowerDID,
     borrowerAddress,
     principalAmount,
-    interestRateBps,
-    duration,
+    1250, // 12.5% APR
+    90 * 24 * 60 * 60, // 90 days
     collateralToken
   );
   console.log(`   Tx sent: ${tx.hash}`);
@@ -115,7 +129,7 @@ async function main() {
     .find((event: any) => event?.name === "LoanCreated");
 
   const loanId = loanCreatedEvent?.args?.loanId?.toString() || "unknown";
-  console.log(`\n🎉 Loan created successfully created!`);
+  console.log(`\n🎉 Loan created successfully!`);
   console.log(`   Loan ID: ${loanId}`);
 
   // Verify loan details

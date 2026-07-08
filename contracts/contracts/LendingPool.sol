@@ -169,7 +169,14 @@ contract LendingPool is Ownable, ReentrancyGuard {
         // Calculate required collateral based on ACS score
         uint256 requiredCollateral = collateralManager.calculateRequiredCollateral(principalAmount, score);
 
-        // Deposit collateral from borrower
+        // Pull collateral from borrower to this contract first
+        IERC20 token = IERC20(collateralToken);
+        token.safeTransferFrom(borrowerAddress, address(this), requiredCollateral);
+
+        // Approve CollateralManager to spend collateral from this contract
+        token.approve(address(collateralManager), requiredCollateral);
+
+        // Deposit collateral to CollateralManager
         collateralManager.depositCollateral(borrowerDID, collateralToken, requiredCollateral);
 
         // Transfer principal from lender DIRECTLY to borrower

@@ -24,8 +24,8 @@ contract ACSOracle is Ownable {
     /// @dev The authorized oracle signer address
     address public oracleSigner;
 
-    /// @dev Score validity period in seconds (default: 10 minutes)
-    uint256 public constant SCORE_VALIDITY = 600;
+    /// @dev Score validity period in seconds (default: 20 minutes)
+    uint256 public constant SCORE_VALIDITY = 1200;
 
     /// @dev Minimum valid score
     uint256 public constant MIN_SCORE = 300;

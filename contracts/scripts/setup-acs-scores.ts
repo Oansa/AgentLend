@@ -53,19 +53,30 @@ async function main() {
     "did:croo:bob",
   ];
 
+  // First, invalidate old scores (owner only) to allow fresh ones
+  console.log("🧹 Invalidating old scores...");
+  for (const did of testDIDs) {
+    const didBytes32 = ethers.keccak256(ethers.toUtf8Bytes(did));
+    try {
+      await acsOracle.invalidateScore(didBytes32);
+      console.log(`  ✅ Invalidated ${did}`);
+    } catch (e) {
+      // Ignore if already invalid or not owner
+    }
+  }
+
   // Set a good credit score (750) for each DID
   const score = 750; // Good credit score (300-900 range)
-  const block = await ethers.provider.getBlock("latest");
-  // Use a timestamp 30 seconds in the past to ensure it's <= block.timestamp when mined
-  const timestamp = (block?.timestamp || Math.floor(Date.now() / 1000)) - 30;
-  const expiry = timestamp + 600; // 10 minutes validity (SCORE_VALIDITY)
 
-  console.log(`📊 Setting score: ${score} for ${testDIDs.length} test DIDs`);
-  console.log(`⏰ Timestamp: ${timestamp}`);
-  console.log(`⏰ Expiry: ${expiry} (${expiry - timestamp}s validity)\n`);
+  console.log(`📊 Setting score: ${score} for ${testDIDs.length} test DIDs\n`);
 
   for (const did of testDIDs) {
     const didBytes32 = ethers.keccak256(ethers.toUtf8Bytes(did));
+
+    // Fetch fresh block for each DID to avoid timestamp drift
+    const currentBlock = await ethers.provider.getBlock("latest");
+    const timestamp = currentBlock?.timestamp || Math.floor(Date.now() / 1000);
+    const expiry = timestamp + 600; // 10 minutes validity (SCORE_VALIDITY)
 
     // Create the digest for signing (matching ACSOracle.computeDigest)
     const digest = ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(
@@ -98,7 +109,9 @@ async function main() {
     const [scoreResult, timestampResult, expiryResult] = await acsOracle.getScore(didBytes32);
 
     if (scoreResult > 0) {
-      console.log(`  ✅ ${did}: score=${scoreResult}, expiry=${expiryResult} (valid: ${expiryResult > timestamp})`);
+      const currentBlock = await ethers.provider.getBlock("latest");
+      const currentTimestamp = currentBlock?.timestamp || Math.floor(Date.now() / 1000);
+      console.log(`  ✅ ${did}: score=${scoreResult}, expiry=${expiryResult} (valid: ${expiryResult > currentTimestamp})`);
     } else {
       console.log(`  ❌ ${did}: No valid score`);
     }

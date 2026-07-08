@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { useWallet } from '../context/WalletContext';
+
+// Lending Pool ABI with events
 const LENDING_POOL_ABI = [
   'function getLoan(uint256 loanId) view returns (tuple(uint256 id, bytes32 borrowerDID, address lender, address principalToken, uint256 principalAmount, uint256 interestRateBps, uint256 startTime, uint256 maturity, address collateralToken, uint256 collateralAmount, uint8 status, uint256 repaidAmount, uint256 liquidatedAmount))',
   'function getBorrowerLoans(bytes32 borrowerDID) view returns (uint256[])',
   'function getLenderLoans(address lender) view returns (uint256[])',
   'function loanCounter() view returns (uint256)',
   'function getOutstanding(uint256 loanId) view returns (uint256)',
+  'event LoanCreated(uint256 indexed loanId, bytes32 indexed borrowerDID, address indexed lender, uint256 principalAmount, uint256 interestRateBps, uint256 maturity, address collateralToken)',
 ];
 
 // ERC20 ABI for token info
@@ -31,6 +34,7 @@ interface FormattedLoan {
   maturity: string;
   startDate: string;
   healthFactor: number;
+  txHash?: string; // Transaction hash for block explorer link
 }
 
 const LENDING_POOL_ADDRESS = import.meta.env.VITE_LENDING_POOL_ADDRESS || '';
@@ -56,6 +60,22 @@ export function useLoans() {
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const lendingPool = new ethers.Contract(LENDING_POOL_ADDRESS, LENDING_POOL_ABI, provider);
+
+      // Query LoanCreated events to get transaction hashes for all loans
+      const loanCreatedFilter = lendingPool.filters.LoanCreated();
+      const events = await lendingPool.queryFilter(loanCreatedFilter, 0, 'latest');
+
+      // Build map of loanId -> txHash
+      const loanTxHashMap = new Map<number, string>();
+      for (const event of events) {
+        const parsedEvent = lendingPool.interface.parseLog(event);
+        if (parsedEvent && parsedEvent.args) {
+          const loanId = Number(parsedEvent.args.loanId);
+          if (loanId > 0) {
+            loanTxHashMap.set(loanId, event.transactionHash);
+          }
+        }
+      }
 
       // Get loan counter to know how many loans exist
       const loanCounter = await lendingPool.loanCounter();
@@ -136,6 +156,7 @@ export function useLoans() {
             maturity: new Date(Number(loan.maturity) * 1000).toISOString().split('T')[0],
             startDate: new Date(Number(loan.startTime) * 1000).toISOString().split('T')[0],
             healthFactor: Math.round(healthFactor * 100) / 100,
+            txHash: loanTxHashMap.get(Number(loan.id)),
           };
 
           allLoans.push(formattedLoan);

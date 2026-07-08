@@ -1,0 +1,2 @@
+await usdc.approve("0xa4E00CB342B36eC9fDc4B50b3d527c3643D4C49e", ethers.parseUnits("1000000", 6))
+const usdc = await ethers.getContractAt("IERC20", "0x158d291D8b47F056751cfF47d1eEcd19FDF9B6f8")
