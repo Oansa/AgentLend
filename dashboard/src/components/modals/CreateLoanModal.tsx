@@ -7,7 +7,7 @@ import { ethers } from 'ethers';
 
 // Contract ABI for loan creation
 const LENDING_POOL_ABI = [
-  'function createLoan(bytes32 borrowerDID, uint256 principalAmount, uint256 interestRateBps, uint256 duration, address collateralToken) returns (uint256)',
+  'function createLoan(bytes32 borrowerDID, address borrowerAddress, uint256 principalAmount, uint256 interestRateBps, uint256 duration, address collateralToken) returns (uint256)',
   'event LoanCreated(uint256 indexed loanId, bytes32 indexed borrowerDID, address indexed lender, uint256 principalAmount, uint256 interestRateBps, uint256 duration, address collateralToken)',
 ];
 
@@ -142,6 +142,7 @@ export function CreateLoanModal({ isOpen, onClose, onSuccess }: CreateLoanModalP
       // Step 2: Create loan
       const tx = await contract.createLoan(
         didBytes32,
+        address, // borrowerAddress - the caller's wallet address
         principalAmount,
         interestRateBps,
         duration,

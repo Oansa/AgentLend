@@ -1,0 +1,22 @@
+{
+  "network": "hardhat",
+  "chainId": "31337",
+  "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "timestamp": "2026-07-08T23:56:58.832Z",
+  "contracts": {
+    "ACSOracle": "0x31Aa3301d972e313B36ff85116B20bf228725e1D",
+    "CollateralManager": "0x37BD1C8B8d91870Dd1322a7aD759538a47601026",
+    "LendingPool": "0xFDd0BccCBd49ab568132e670Bc172720BB70979F",
+    "BaseToken": "0x2BC080CA5b67a57739972e6B4B051F64D082A48c",
+    "WETH": "0x3B9bcCbE186b1e5651aFc0096Ea99C0CA94F5475",
+    "USDC": "0x2BC080CA5b67a57739972e6B4B051F64D082A48c"
+  },
+  "configuration": {
+    "oracleSigner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    "collateralTokens": [
+      "0x3B9bcCbE186b1e5651aFc0096Ea99C0CA94F5475",
+      "0x2BC080CA5b67a57739972e6B4B051F64D082A48c"
+    ],
+    "mockTokensDeployed": true
+  }
+}

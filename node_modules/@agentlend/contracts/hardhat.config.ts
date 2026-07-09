@@ -20,7 +20,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
         url: process.env.BASE_MAINNET_RPC_URL || "",
-        enabled: !!process.env.BASE_MAINNET_RPC_URL,
+        enabled: false, // Disabled by default - set HARDHAT_FORK=true to enable
       },
       chainId: 31337,
       mining: {

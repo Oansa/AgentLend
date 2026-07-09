@@ -190,7 +190,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 const CREATE_LOAN_ABI = [
-  'function createLoan(bytes32 borrowerDID, uint256 principalAmount, uint256 interestRateBps, uint256 duration, address collateralToken) returns (uint256)',
+  'function createLoan(bytes32 borrowerDID, address borrowerAddress, uint256 principalAmount, uint256 interestRateBps, uint256 duration, address collateralToken) returns (uint256)',
 ];
 
 const ERC20_APPROVE_ABI = [
@@ -232,6 +232,7 @@ export function useCreateLoan() {
       // 2. Create loan
       const tx = await lendingPool.createLoan(
         didBytes32,
+        address, // borrowerAddress - the caller's wallet address
         principalAmount,
         interestRateBps,
         duration,
