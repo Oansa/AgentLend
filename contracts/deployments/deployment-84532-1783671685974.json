@@ -1,0 +1,22 @@
+{
+  "network": "base-sepolia",
+  "chainId": "84532",
+  "deployer": "0x9471827baBFA26add32910d024ad0cE5546c3cC6",
+  "timestamp": "2026-07-10T08:21:25.973Z",
+  "contracts": {
+    "ACSOracle": "0xCE29446B68c1F2E0Ce7a0010274c4e19F06f5d4A",
+    "CollateralManager": "0x046010ff82033003729c818DEBc06508565B098f",
+    "LendingPool": "0x5d0D428FBe08617035eF8Dc0c468930084347646",
+    "BaseToken": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "WETH": "0x4200000000000000000000000000000000000006",
+    "USDC": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+  },
+  "configuration": {
+    "oracleSigner": "0x9471827baBFA26add32910d024ad0cE5546c3cC6",
+    "collateralTokens": [
+      "0x4200000000000000000000000000000000000006",
+      "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    ],
+    "mockTokensDeployed": false
+  }
+}

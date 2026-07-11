@@ -5,9 +5,10 @@ import * as path from "path";
 async function main() {
   console.log("🔍 Checking borrower received funds...\n");
 
+  // Get the latest deployment for Base Sepolia
   const deploymentsDir = path.join(__dirname, "..", "deployments");
   const files = fs.readdirSync(deploymentsDir)
-    .filter(f => f.startsWith("deployment-31337-"))
+    .filter(f => f.startsWith("deployment-84532-"))
     .sort()
     .reverse();
 
